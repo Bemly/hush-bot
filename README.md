@@ -122,6 +122,19 @@ json_arr "a" "b" "c"                  # 构建数组
 docker run --rm -v $(pwd):/test busybox:musl hush /test/test/run.sh
 ```
 
+## 性能基准
+
+| 指标 | 值 |
+|------|-----|
+| httpd 空载内存 | ~600 KB |
+| 单 CGI 请求内存 | ~1-2 MB (fork + 脚本 + awk) |
+| bot 实例常驻 | ~5-10 MB |
+| CGI 本体耗时 | <10ms (fork + source + awk) |
+| webhook 纯收 (无回复) | ~100-200 req/s |
+| webhook + API 回复 | ~1-5 req/s (受限于外部 API 延迟) |
+
+**瓶颈**: httpd 单线程串行处理，一个请求调 API 卡住会堵后续。适合个人/小群 bot，高并发需换异步架构。
+
 ## 关键约束
 
 - **busybox:musl** 运行时 — 无 bash, gawk, curl, jq
