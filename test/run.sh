@@ -11,6 +11,15 @@ cd "$(dirname "$0")/.." || exit 1
 . ./adapter/qq/system.sh
 . ./adapter/qq/message.sh
 . ./adapter/qq/webhook.sh
+. ./adapter/telegram/core.sh
+. ./adapter/telegram/bot.sh
+. ./adapter/telegram/message.sh
+. ./adapter/telegram/webhook.sh
+. ./adapter/discord/core.sh
+. ./adapter/discord/message.sh
+. ./adapter/discord/channel.sh
+. ./adapter/discord/guild.sh
+. ./adapter/discord/webhook.sh
 . ./test/helper.sh
 . ./test/mock/mock_wget.sh
 
