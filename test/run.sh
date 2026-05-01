@@ -33,6 +33,20 @@ cd "$(dirname "$0")/.." || exit 1
 . ./adapter/discord/channel.sh
 . ./adapter/discord/guild.sh
 . ./adapter/discord/webhook.sh
+. ./adapter/discord/user.sh
+. ./adapter/discord/application.sh
+. ./adapter/discord/emoji.sh
+. ./adapter/discord/sticker.sh
+. ./adapter/discord/automod.sh
+. ./adapter/discord/event.sh
+. ./adapter/discord/template.sh
+. ./adapter/discord/invite.sh
+. ./adapter/discord/stage.sh
+. ./adapter/discord/voice.sh
+. ./adapter/discord/audit.sh
+. ./adapter/discord/poll.sh
+. ./adapter/discord/soundboard.sh
+. ./adapter/discord/monetize.sh
 . ./test/helper.sh
 . ./test/mock/mock_wget.sh
 

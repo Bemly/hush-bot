@@ -242,3 +242,25 @@
 [2026-05-01T18:48:52] WARN dispatch: no rules file at /tmp/test-rules.1
 [2026-05-01T18:48:52] INFO tg_webhook: callback data=btn_click
 [2026-05-01T18:48:52] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T18:53:41] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-01T18:53:41] INFO handler_ping: from 111
+[2026-05-01T18:53:41] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-01T18:53:41] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-01T18:53:41] WARN http_get retry 3/2: http://fail.example.com
+[2026-05-01T18:53:41] WARN http_post retry 1/2: http://localhost:8080/api/send_group_message
+[2026-05-01T18:53:41] WARN http_post retry 2/2: http://localhost:8080/api/send_group_message
+[2026-05-01T18:53:41] WARN http_post retry 3/2: http://localhost:8080/api/send_group_message
+[2026-05-01T18:53:41] WARN http_post retry 1/2: http://localhost:8080/api/get_login_info
+[2026-05-01T18:53:41] WARN http_post retry 2/2: http://localhost:8080/api/get_login_info
+[2026-05-01T18:53:41] WARN http_post retry 3/2: http://localhost:8080/api/get_login_info
+[2026-05-01T18:53:41] INFO qq_webhook: event=group_nudge
+[2026-05-01T18:53:41] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T18:53:41] INFO qq_webhook: event=friend_request
+[2026-05-01T18:53:41] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T18:53:41] INFO qq_webhook: event=bot_offline
+[2026-05-01T18:53:41] ERROR qq_webhook: bot offline: kick
+[2026-05-01T18:53:41] INFO qq_webhook: event=weird_custom
+[2026-05-01T18:53:41] INFO tg_webhook: message text=/ping
+[2026-05-01T18:53:41] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T18:53:41] INFO tg_webhook: callback data=btn_click
+[2026-05-01T18:53:41] WARN dispatch: no rules file at /tmp/test-rules.1
