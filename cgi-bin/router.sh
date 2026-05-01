@@ -49,6 +49,16 @@ case "$_platform" in
             exit 0
         }
         ;;
+    telegram)
+        . "$_HB/adapter/telegram/webhook.sh"
+        tg_webhook "$_body" || {
+            _err="$_ERROR"
+            log_err "router: $_err"
+            printf 'Content-Type: application/json\r\n\r\n'
+            printf '{"status":"error","message":"%s"}' "$_err"
+            exit 0
+        }
+        ;;
     *)
         printf 'Content-Type: text/plain\r\n\r\n'
         printf 'unknown platform: %s' "$_platform"

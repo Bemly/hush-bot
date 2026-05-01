@@ -10,6 +10,14 @@ QQ_TOKEN="${QQ_TOKEN:-}"
 # QQ API base URL
 QQ_API_BASE="http://${QQ_HOST}:${QQ_PORT}${QQ_PREFIX}api"
 
+# ---- Telegram ----
+TG_TOKEN="${TG_TOKEN:-}"
+TG_API_BASE="https://api.telegram.org/bot${TG_TOKEN}"
+
+# ---- Discord ----
+DC_TOKEN="${DC_TOKEN:-}"
+DC_API_BASE="https://discord.com/api/v10"
+
 # ---- Bot server ----
 BOT_PORT="${BOT_PORT:-8080}"
 BOT_HOST="${BOT_HOST:-0.0.0.0}"
