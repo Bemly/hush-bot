@@ -43,7 +43,7 @@ case "$_platform" in
         . "$_HB/adapter/qq/webhook.sh"
         qq_webhook "$_body" || {
             _err="$_ERROR"
-            log_err "router: qq webhook failed: $_err"
+            log_err "router: $_err"
             printf 'Content-Type: application/json\r\n\r\n'
             printf '{"status":"error","message":"%s"}' "$_err"
             exit 0

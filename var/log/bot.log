@@ -16,3 +16,57 @@
 [2026-05-01T16:04:56] INFO qq_webhook: event=bot_offline
 [2026-05-01T16:04:56] ERROR qq_webhook: bot offline: kick
 [2026-05-01T16:04:57] INFO qq_webhook: event=weird_custom
+[2026-05-01T16:12:34] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-01T16:12:34] INFO handler_ping: from 111
+[2026-05-01T16:12:34] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-01T16:12:34] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-01T16:12:34] WARN http_get retry 3/2: http://fail.example.com
+[2026-05-01T16:12:34] WARN http_post retry 1/2: http://localhost:8080/api/send_group_message
+[2026-05-01T16:12:34] WARN http_post retry 2/2: http://localhost:8080/api/send_group_message
+[2026-05-01T16:12:34] WARN http_post retry 3/2: http://localhost:8080/api/send_group_message
+[2026-05-01T16:12:34] WARN http_post retry 1/2: http://localhost:8080/api/get_login_info
+[2026-05-01T16:12:34] WARN http_post retry 2/2: http://localhost:8080/api/get_login_info
+[2026-05-01T16:12:34] WARN http_post retry 3/2: http://localhost:8080/api/get_login_info
+[2026-05-01T16:12:34] INFO qq_webhook: event=group_nudge
+[2026-05-01T16:12:34] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T16:12:34] INFO qq_webhook: event=friend_request
+[2026-05-01T16:12:34] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T16:12:34] INFO qq_webhook: event=bot_offline
+[2026-05-01T16:12:34] ERROR qq_webhook: bot offline: kick
+[2026-05-01T16:12:34] INFO qq_webhook: event=weird_custom
+[2026-05-01T16:15:52] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-01T16:15:52] INFO handler_ping: from 111
+[2026-05-01T16:15:52] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-01T16:15:52] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-01T16:15:52] WARN http_get retry 3/2: http://fail.example.com
+[2026-05-01T16:15:52] WARN http_post retry 1/2: http://localhost:8080/api/send_group_message
+[2026-05-01T16:15:52] WARN http_post retry 2/2: http://localhost:8080/api/send_group_message
+[2026-05-01T16:15:52] WARN http_post retry 3/2: http://localhost:8080/api/send_group_message
+[2026-05-01T16:15:52] WARN http_post retry 1/2: http://localhost:8080/api/get_login_info
+[2026-05-01T16:15:52] WARN http_post retry 2/2: http://localhost:8080/api/get_login_info
+[2026-05-01T16:15:52] WARN http_post retry 3/2: http://localhost:8080/api/get_login_info
+[2026-05-01T16:15:52] INFO qq_webhook: event=group_nudge
+[2026-05-01T16:15:52] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T16:15:52] INFO qq_webhook: event=friend_request
+[2026-05-01T16:15:52] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T16:15:52] INFO qq_webhook: event=bot_offline
+[2026-05-01T16:15:52] ERROR qq_webhook: bot offline: kick
+[2026-05-01T16:15:52] INFO qq_webhook: event=weird_custom
+[2026-05-01T16:17:54] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-01T16:17:54] INFO handler_ping: from 111
+[2026-05-01T16:17:54] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-01T16:17:54] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-01T16:17:54] WARN http_get retry 3/2: http://fail.example.com
+[2026-05-01T16:17:54] WARN http_post retry 1/2: http://localhost:8080/api/send_group_message
+[2026-05-01T16:17:54] WARN http_post retry 2/2: http://localhost:8080/api/send_group_message
+[2026-05-01T16:17:54] WARN http_post retry 3/2: http://localhost:8080/api/send_group_message
+[2026-05-01T16:17:54] WARN http_post retry 1/2: http://localhost:8080/api/get_login_info
+[2026-05-01T16:17:54] WARN http_post retry 2/2: http://localhost:8080/api/get_login_info
+[2026-05-01T16:17:54] WARN http_post retry 3/2: http://localhost:8080/api/get_login_info
+[2026-05-01T16:17:54] INFO qq_webhook: event=group_nudge
+[2026-05-01T16:17:54] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T16:17:54] INFO qq_webhook: event=friend_request
+[2026-05-01T16:17:54] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-01T16:17:54] INFO qq_webhook: event=bot_offline
+[2026-05-01T16:17:54] ERROR qq_webhook: bot offline: kick
+[2026-05-01T16:17:54] INFO qq_webhook: event=weird_custom

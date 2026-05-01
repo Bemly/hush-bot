@@ -10,10 +10,10 @@ handler_ping() {
     if [ "$_scene" = "group" ]; then
         _gid="$(json_get "$_raw" group_id)"
         _segs="$(qq_text_segments "pong!")"
-        qq_message_send_group "$_gid" "$_segs" || log_err "handler_ping: reply failed"
+        qq_message_send_group "$_gid" "$_segs" || log_err "handler_ping: $_ERROR"
     else
         _segs="$(qq_text_segments "pong!")"
-        qq_message_send_private "$_uid" "$_segs" || log_err "handler_ping: reply failed"
+        qq_message_send_private "$_uid" "$_segs" || log_err "handler_ping: $_ERROR"
     fi
 }
 
@@ -26,9 +26,9 @@ handler_echo() {
     _scene="$(json_get "$_raw" message_scene)"
     if [ "$_scene" = "group" ]; then
         _gid="$(json_get "$_raw" group_id)"
-        qq_message_send_group "$_gid" "$_segs" || log_err "handler_echo: reply failed"
+        qq_message_send_group "$_gid" "$_segs" || log_err "handler_echo: $_ERROR"
     else
-        qq_message_send_private "$_uid" "$_segs" || log_err "handler_echo: reply failed"
+        qq_message_send_private "$_uid" "$_segs" || log_err "handler_echo: $_ERROR"
     fi
 }
 
@@ -41,8 +41,8 @@ handler_info() {
     _scene="$(json_get "$_raw" message_scene)"
     if [ "$_scene" = "group" ]; then
         _gid="$(json_get "$_raw" group_id)"
-        qq_message_send_group "$_gid" "$_segs" || log_err "handler_info: reply failed"
+        qq_message_send_group "$_gid" "$_segs" || log_err "handler_info: $_ERROR"
     else
-        qq_message_send_private "$_uid" "$_segs" || log_err "handler_info: reply failed"
+        qq_message_send_private "$_uid" "$_segs" || log_err "handler_info: $_ERROR"
     fi
 }

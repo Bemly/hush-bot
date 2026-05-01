@@ -6,7 +6,7 @@ qq_webhook() {
 
     # Extract event_type
     _evt="$(json_get "$_raw" event_type)" || {
-        _ERROR="qq_webhook: cannot parse event_type from $_raw"
+        _ERROR="webhook.qq: cannot parse event_type from $_raw"
         return 1
     }
 
@@ -14,7 +14,7 @@ qq_webhook() {
 
     case "$_evt" in
         message_receive)
-            _msg="$(json_get "$_raw" data)" || { _ERROR="qq_webhook: no data"; return 1; }
+            _msg="$(json_get "$_raw" data)" || { _ERROR="webhook.qq: no event data"; return 1; }
             _mid="$(json_get "$_msg" sender_id)" || _mid=""
             _txt="$(qq_extract_text "$_msg")"
             log_info "qq_webhook: message from $_mid: $_txt"

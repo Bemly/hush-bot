@@ -1,31 +1,12 @@
 # QQ File API
 
-. "$_HB/adapter/qq/system.sh"  # for _qq_call
+. "$_HB/adapter/qq/system.sh"  # for _qq_call, _qq_api
 
 qq_file_upload_group() {
-    _gid="$1" _uri="$2" _name="$3" _folder="${4:-}"
-    _body="$(json_obj "group_id" "$_gid" "file_uri" "$_uri" "file_name" "$_name")"
-    [ -n "$_folder" ] && _body="$(printf '%s' "$_body" | sed 's/}$/,"parent_folder_id":"'"$_folder"'"/}')"
-    _resp="$(_qq_call "upload_group_file" "$_body")" || return 1
-    json_get "$_resp" data || { _ERROR="qq_file: upload group parse fail"; return 1; }
+    _body="$(json_obj "group_id" "$1" "file_uri" "$2" "file_name" "$3")"
+    [ -n "${4:-}" ] && _body="$(printf '%s' "$_body" | sed 's/}$/,"parent_folder_id":"'"$4"'"/}')"
+    _qq_api "upload_group_file" "$_body" "qq.upload_group"
 }
-
-qq_file_upload_private() {
-    _uid="$1" _uri="$2" _name="$3"
-    _body="$(json_obj "user_id" "$_uid" "file_uri" "$_uri" "file_name" "$_name")"
-    _resp="$(_qq_call "upload_private_file" "$_body")" || return 1
-    json_get "$_resp" data || { _ERROR="qq_file: upload private parse fail"; return 1; }
-}
-
-qq_file_get_download_url() {
-    _gid="$1" _fid="$2"
-    _body="$(json_obj "group_id" "$_gid" "file_id" "$_fid")"
-    _resp="$(_qq_call "get_group_file_download_url" "$_body")" || return 1
-    json_get "$_resp" data || { _ERROR="qq_file: download url parse fail"; return 1; }
-}
-
-qq_file_delete_group() {
-    _gid="$1" _fid="$2"
-    _body="$(json_obj "group_id" "$_gid" "file_id" "$_fid")"
-    _resp="$(_qq_call "delete_group_file" "$_body")" || return 1
-}
+qq_file_upload_private()   { _qq_api "upload_private_file" "$(json_obj "user_id" "$1" "file_uri" "$2" "file_name" "$3")" "qq.upload_private"; }
+qq_file_get_download_url() { _qq_api "get_group_file_download_url" "$(json_obj "group_id" "$1" "file_id" "$2")" "qq.download_url"; }
+qq_file_delete_group()     { _qq_call "delete_group_file" "$(json_obj "group_id" "$1" "file_id" "$2")" >/dev/null; }
