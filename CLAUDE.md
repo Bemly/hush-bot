@@ -57,6 +57,12 @@ See memory: busybox-httpd-cgi.md
 - Use 1-3 char variable names
 - See memory: busybox-awk-limits.md
 
+## Coding patterns
+
+- **Refactor repeated patterns into helpers**: when the same `_qq_call + json_get + error wrap` pattern appears across 20+ functions, extract ONE `_qq_api()` helper. Don't edit each copy individually.
+- **Avoid `$()` for function calls that set `_ERROR`**: `$()` is a subshell, globals are lost. Use temp files.
+- **`_ERROR` chain**: always prepend, never overwrite. Format: `module.func: $_ERROR`
+
 ## Proxy
 
 macOS proxy at 127.0.0.1:7890. Pull images with:
