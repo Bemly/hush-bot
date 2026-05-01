@@ -14,6 +14,11 @@ cd "$(dirname "$0")/.." || exit 1
 . ./adapter/telegram/core.sh
 . ./adapter/telegram/bot.sh
 . ./adapter/telegram/message.sh
+. ./adapter/telegram/chat.sh
+. ./adapter/telegram/admin.sh
+. ./adapter/telegram/inline.sh
+. ./adapter/telegram/file.sh
+. ./adapter/telegram/commands.sh
 . ./adapter/telegram/webhook.sh
 . ./adapter/discord/core.sh
 . ./adapter/discord/message.sh
