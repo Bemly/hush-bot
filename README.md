@@ -23,15 +23,10 @@ Ayu.Core/
 │   ├── dispatch.sh         # 消息路由 + 插件接口
 │   └── log.sh              # 分级日志
 ├── adapter/                 # 平台适配器
-│   └── qq/                 # QQ (LagrangeV2.Milky)
+│   ├── qq/                 # QQ (LagrangeV2.Milky)
+│   ├── telegram/           # Telegram Bot API
+│   └── discord/            # Discord REST API
 ├── plugin/                  # 业务插件 (你的 handler 放这里)
-│       ├── webhook.sh      # 事件解析
-│       ├── system.sh       # get_login_info, get_impl_info
-│       ├── message.sh      # send/get/recall message
-│       ├── group.sh        # 群管理
-│       ├── friend.sh       # 好友管理
-│       ├── file.sh         # 文件操作
-│       └── handler.sh      # /ping, /echo, /info
 ├── test/                   # 内部测试 (mock + fixtures)
 └── var/
     ├── log/                # 运行日志
