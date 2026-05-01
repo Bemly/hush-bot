@@ -8,6 +8,7 @@ qq_message_get()             { _qq_api "get_message" "$(json_obj "message_scene"
 qq_message_get_history()     { _qq_api "get_history_messages" "$(json_obj "message_scene" "$1" "peer_id" "$2" "start_message_seq" "${3:-0}" "limit" "${4:-20}")" "qq.history"; }
 qq_message_recall_group()    { _qq_call "recall_group_message" "$(json_obj "group_id" "$1" "message_seq" "$2")" >/dev/null; }
 qq_message_recall_private()  { _qq_call "recall_private_message" "$(json_obj "user_id" "$1" "message_seq" "$2")" >/dev/null; }
+qq_message_get_resource_url() { _qq_api "get_resource_temp_url" "$(json_obj "resource_id" "$1")" "qq.resource_url"; }
 
 # Build a text segment JSON
 qq_seg_text() {
