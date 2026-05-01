@@ -5,11 +5,10 @@ WORKDIR /app
 # Copy everything
 COPY . .
 
-# busybox httpd auto-detects <home>/cgi-bin/ as CGI directory (no H: config needed)
-RUN mkdir -p /app/cgi-bin && printf '#!/bin/sh\nexec /app/bin/router.sh\n' > /app/cgi-bin/router.sh && chmod +x /app/cgi-bin/router.sh
-RUN chmod +x /app/bin/router.sh
+# busybox httpd auto-detects cgi-bin/ as CGI directory (no H: needed)
+RUN chmod +x cgi-bin/router.sh cgi-bin/start.sh
 RUN mkdir -p var/log var/state
 
 EXPOSE 8080
 
-CMD ["sh", "bin/start.sh"]
+CMD ["sh", "cgi-bin/start.sh"]
