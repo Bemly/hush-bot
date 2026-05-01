@@ -1,0 +1,56 @@
+#!/bin/sh
+# router.sh — hush-bot CGI entry point
+# Receives webhook POSTs, routes to platform handlers, dispatches replies.
+# Path: /cgi-bin/router.sh/<platform>
+# Or:   /cgi-bin/router.sh?platform=<platform>
+
+# ---- bootstrap ----
+_HB="$(dirname "$0")/.."
+. "$_HB/lib/core.sh"
+. "$_HB/etc/config.sh"
+. "$_HB/lib/log.sh"
+. "$_HB/lib/http.sh"
+. "$_HB/lib/dispatch.sh"
+
+# ---- read request ----
+_METHOD="${REQUEST_METHOD:-POST}"
+_URI="${REQUEST_URI:-}"
+_PATH="${PATH_INFO:-}"
+_CT="${CONTENT_TYPE:-}"
+
+# read body from stdin
+_body="$(dd bs="$CONTENT_LENGTH" 2>/dev/null)"
+
+# detect platform from URL path or query string
+_platform=""
+case "$_URI" in
+    */qq|*/qq/*) _platform="qq" ;;
+    */telegram|*/telegram/*) _platform="telegram" ;;
+    */discord|*/discord/*) _platform="discord" ;;
+    *platform=qq*) _platform="qq" ;;
+    *platform=telegram*) _platform="telegram" ;;
+    *platform=discord*) _platform="discord" ;;
+    *) _platform="qq" ;;  # default
+esac
+
+_JSON_ELINE="$LINENO"
+
+log_info "router: $_METHOD $_URI platform=$_platform len=${#_body}"
+
+# ---- route ----
+case "$_platform" in
+    qq)
+        . "$_HB/plugin/qq/webhook.sh"
+        qq_webhook "$_body" || {
+            _err="$_ERROR"
+            log_err "router: qq webhook failed: $_err"
+            printf 'Content-Type: application/json\r\n\r\n'
+            printf '{"status":"error","message":"%s"}' "$_err"
+            exit 0
+        }
+        ;;
+    *)
+        printf 'Content-Type: text/plain\r\n\r\n'
+        printf 'unknown platform: %s' "$_platform"
+        ;;
+esac

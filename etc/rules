@@ -1,0 +1,8 @@
+# hush-bot dispatch rules
+# Format: <pattern>|<handler_script>|<handler_func>
+# Patterns are shell globs matched against message text
+# Comments start with #
+
+/ping|qq/handler.sh|handler_ping
+/echo|qq/handler.sh|handler_echo
+/info|qq/handler.sh|handler_info
