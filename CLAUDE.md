@@ -17,16 +17,15 @@ docker run --rm -v $(pwd):/test busybox:musl sh /test/test/run.sh
 
 ```
 hush-bot/                  # SNS bot framework (this repo)
-├── lib/
-│   └── hush-json/         # → git submodule: pure hush JSON interpreter
+├── hush-json/             # → git submodule: pure hush JSON interpreter
 ```
 
 ## Submodule
 
-`lib/hush-json` is a git submodule → https://github.com/Bemly/hush-json. After changes to hush-json, update the pin in hush-bot:
+`hush-json/` is a git submodule → https://github.com/Bemly/hush-json. After changes to hush-json, update the pin in hush-bot:
 
 ```sh
-cd lib/hush-json && git pull origin main && cd ../.. && git add lib/hush-json && git commit -m "update hush-json"
+cd hush-json && git pull origin main && cd .. && git add hush-json && git commit -m "update hush-json"
 ```
 
 ## Git workflow
