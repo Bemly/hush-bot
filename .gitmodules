@@ -1,3 +1,4 @@
 [submodule "hush-json"]
 	path = hush-json
 	url = https://github.com/Bemly/hush-json.git
+	branch = main
