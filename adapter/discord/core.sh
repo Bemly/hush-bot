@@ -1,4 +1,4 @@
-# Discord core — _dc_call + _dc_api
+# Discord core — _dc_req, _dc_get, _dc_post, _dc_api
 # Auth: Authorization: Bot <TOKEN>
 
 . "$_HB/lib/http.sh"
@@ -7,40 +7,64 @@ _dc_auth() {
     printf 'Authorization: Bot %s' "$DC_TOKEN"
 }
 
-_dc_call() {
-    _path="$1" _body="$2"
-    http_post "${DC_API_BASE}${_path}" "$_body" \
-        "Content-Type:application/json" \
-        "$(_dc_auth)" || {
-        _ERROR="dc$_path: $_ERROR"
-        return 1
-    }
-}
-
-# _dc_api <path> <body> <error_tag>
-_dc_api() {
-    _p="$1" _body="$2" _tag="$3"
-    _out="/tmp/dc-api.$$"
-    _dc_call "$_p" "$_body" >"$_out" || { rm -f "$_out"; return 1; }
-    _result="$(cat "$_out")"
-    rm -f "$_out"
-    printf '%s' "$_result"
-}
-
-# _dc_get <path> — simple GET (no body)
+# _dc_get <path> — GET request (no body)
 _dc_get() {
     _path="$1"
-    _out="/tmp/dc-get.$$"
-    _err="/tmp/dc-err.$$"
-    printf '' | wget -q -O- -T 10 -Y off \
-        --header="Authorization: Bot $DC_TOKEN" \
-        --header="Content-Type:application/json" \
-        "${DC_API_BASE}${_path}" >"$_out" 2>"$_err"
+    _out="/tmp/dc-out.$$"
+    http_get "${DC_API_BASE}${_path}" \
+        "Content-Type:application/json" \
+        "$(_dc_auth)" >"$_out"
     _rc=$?
     if [ $_rc -ne 0 ]; then
-        rm -f "$_out" "$_err"
+        _ERROR="dc.GET $_path: $_ERROR"
+        rm -f "$_out"
         return 1
     fi
     cat "$_out"
-    rm -f "$_out" "$_err"
+    rm -f "$_out"
+}
+
+# _dc_post <path> <body> — POST/PATCH/PUT request
+_dc_post() {
+    _method="$1" _path="$2" _body="$3"
+    _out="/tmp/dc-out.$$"
+    http_post "${DC_API_BASE}${_path}" "$_body" \
+        "Content-Type:application/json" \
+        "$(_dc_auth)" >"$_out"
+    _rc=$?
+    if [ $_rc -ne 0 ]; then
+        _ERROR="dc.$_method $_path: $_ERROR"
+        rm -f "$_out"
+        return 1
+    fi
+    cat "$_out"
+    rm -f "$_out"
+}
+
+# _dc_api <method> <path> <body> <error_tag>
+_dc_api() {
+    _m="$1" _p="$2" _body="$3" _tag="$4"
+    _out="/tmp/dc-api.$$"
+    _dc_post "$_m" "$_p" "$_body" >"$_out" || { rm -f "$_out"; return 1; }
+    cat "$_out"
+    rm -f "$_out"
+}
+
+# _dc_void <method> <path> <body> — fire and forget
+_dc_void() {
+    _m="$1" _p="$2" _body="${3:-{}}"
+    _out="/tmp/dc-void.$$"
+    _dc_post "$_m" "$_p" "$_body" >"$_out" || { rm -f "$_out"; return 1; }
+    rm -f "$_out"
+}
+
+# _dc_execute <webhook_url> <body> — execute webhook (no auth)
+dc_webhook_execute() {
+    _url="$1" _content="$2" _username="${3:-}"
+    _body="$(json_obj "content" "$_content")"
+    [ -n "$_username" ] && _body="$(printf '%s' "$_body" | sed 's/}$/,"username":"'"$_username"'"/}')"
+    http_post "$_url" "$_body" "Content-Type:application/json" || {
+        _ERROR="dc.webhook: $_ERROR"
+        return 1
+    }
 }
