@@ -23,10 +23,27 @@ hush-bot/                  # SNS bot framework (this repo)
 
 ## Submodule
 
-`lib/hush-json` is a git submodule pointing to `../hush-json` (local). After changes to hush-json, update the pin in hush-bot:
+`lib/hush-json` is a git submodule → https://github.com/Bemly/hush-json. After changes to hush-json, update the pin in hush-bot:
 
 ```sh
-cd lib/hush-json && git pull && cd ../.. && git add lib/hush-json && git commit -m "update hush-json"
+cd lib/hush-json && git pull origin main && cd ../.. && git add lib/hush-json && git commit -m "update hush-json"
+```
+
+## Git workflow
+
+**IMPORTANT: After ANY changes to either repo, commit AND push to GitHub immediately.**
+
+- hush-json: https://github.com/Bemly/hush-json
+- hush-bot: https://github.com/Bemly/hush-bot
+
+```sh
+# In hush-json: commit and push
+cd /Users/bemly/cchaha/hush-json
+git add -A && git commit -m "<message>" && git push
+
+# In hush-bot: commit, push, and update submodule if hush-json changed
+cd /Users/bemly/cchaha/hush-bot
+git add -A && git commit -m "<message>" && git push
 ```
 
 ## BusyBox awk limitations
