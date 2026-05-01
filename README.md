@@ -123,7 +123,7 @@ json_arr "a" "b" "c"                  # 构建数组
 ## 运行测试
 
 ```sh
-docker run --rm -v $(pwd):/test busybox:musl sh /test/test/run.sh
+docker run --rm -v $(pwd):/test busybox:musl hush /test/test/run.sh
 ```
 
 ## 关键约束
