@@ -20,6 +20,14 @@ cd "$(dirname "$0")/.." || exit 1
 . ./adapter/telegram/file.sh
 . ./adapter/telegram/commands.sh
 . ./adapter/telegram/webhook.sh
+. ./adapter/telegram/profile.sh
+. ./adapter/telegram/sticker.sh
+. ./adapter/telegram/payment.sh
+. ./adapter/telegram/game.sh
+. ./adapter/telegram/business.sh
+. ./adapter/telegram/story.sh
+. ./adapter/telegram/gift.sh
+. ./adapter/telegram/misc.sh
 . ./adapter/discord/core.sh
 . ./adapter/discord/message.sh
 . ./adapter/discord/channel.sh
