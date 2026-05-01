@@ -1,5 +1,7 @@
 # QQ System API — get_login_info, get_impl_info, etc.
 
+. "$_HB/lib/http.sh"
+
 _qq_auth() {
     printf 'Authorization: Bearer %s' "$QQ_TOKEN"
 }

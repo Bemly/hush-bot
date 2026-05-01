@@ -50,17 +50,10 @@ qq_webhook() {
 }
 
 # Extract plain text from QQ message segments
+# Uses sed to extract text from segments array (avoids pipe/subshell issues)
 qq_extract_text() {
     _msg="$1"
     _segs="$(json_get "$_msg" segments)" || { echo ""; return; }
-    _txt=""
-    # Try to extract each "text" segment — brute force for simple cases
-    printf '%s' "$_segs" | sed 's/},{/}\
-{/g' | while IFS= read -r _seg; do
-        _type="$(printf '%s' "$_seg" | sed -n 's/.*"type":"\([^"]*\)".*/\1/p')"
-        if [ "$_type" = "text" ]; then
-            _t="$(printf '%s' "$_seg" | sed -n 's/.*"text":"\([^"]*\)".*/\1/p')"
-            printf '%s' "$_t"
-        fi
-    done
+    # Extract all "text":"..." values from the segments array
+    printf '%s' "$_segs" | sed -n 's/.*"type":"text"[^}]*"text":"\([^"]*\)".*/\1/p'
 }
