@@ -45,6 +45,12 @@ cd /Users/bemly/cchaha/hush-bot
 git add -A && git commit -m "<message>" && git push
 ```
 
+## BusyBox httpd CGI
+
+**CGI path is hardcoded to `/cgi-bin/`.** `H:` directive only does URL rewriting (static files), NOT CGI. The repo uses `cgi-bin/` directory directly — no wrapper, no `H:` config needed. httpd auto-detects and executes scripts under `<home>/cgi-bin/`.
+
+See memory: busybox-httpd-cgi.md
+
 ## BusyBox awk limitations
 
 - Function signatures must be short: total line from `function` to `{` under ~55 chars
