@@ -2,7 +2,9 @@
 # Source this first: . ./lib/core.sh
 
 # ---- hush-json ----
-_JSON_HOME="$(pwd)/hush-json"
+# Use _HB (bot root) if set, otherwise fall back to $(pwd)
+: "${_HB:=$(pwd)}"
+_JSON_HOME="$_HB/hush-json"
 . "$_JSON_HOME/lib/json.sh"
 
 # ---- global error state ----

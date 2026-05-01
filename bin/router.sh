@@ -52,5 +52,11 @@ case "$_platform" in
     *)
         printf 'Content-Type: text/plain\r\n\r\n'
         printf 'unknown platform: %s' "$_platform"
+        exit 0
         ;;
 esac
+
+# CGI success response
+printf 'Content-Type: application/json\r\n\r\n'
+printf '{"status":"ok"}'
+exit 0
