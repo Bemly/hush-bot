@@ -1,6 +1,6 @@
 # QQ Message API — send, get, recall messages
 
-. "$_HB/plugin/qq/system.sh"  # for _qq_call, _qq_auth
+. "$_HB/adapter/qq/system.sh"  # for _qq_call, _qq_auth
 
 qq_message_send_group() {
     _gid="$1" _segs="$2"   # segments is a JSON array string

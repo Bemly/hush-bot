@@ -1,6 +1,6 @@
 # QQ Friend API
 
-. "$_HB/plugin/qq/system.sh"  # for _qq_call
+. "$_HB/adapter/qq/system.sh"  # for _qq_call
 
 qq_friend_get_list() {
     _nocache="${1:-false}"

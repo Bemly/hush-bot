@@ -8,9 +8,9 @@ cd "$(dirname "$0")/.." || exit 1
 . ./lib/http.sh
 . ./lib/dispatch.sh
 . ./etc/config.sh
-. ./plugin/qq/system.sh
-. ./plugin/qq/message.sh
-. ./plugin/qq/webhook.sh
+. ./adapter/qq/system.sh
+. ./adapter/qq/message.sh
+. ./adapter/qq/webhook.sh
 . ./test/helper.sh
 . ./test/mock/mock_wget.sh
 

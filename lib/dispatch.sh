@@ -20,7 +20,7 @@ dispatch() {
         case "$_txt" in
             $_pat)
                 log_info "dispatch: $_txt → $_func (from $_script)"
-                _script="$(pwd)/plugin/$_script"
+                _script="$(pwd)/adapter/$_script"
                 if [ -f "$_script" ]; then
                     . "$_script"
                     "$_func" "$_pf" "$_evt" "$_uid" "$_txt" "$_raw" || {

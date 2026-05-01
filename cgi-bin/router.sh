@@ -40,7 +40,7 @@ log_info "router: $_METHOD $_URI platform=$_platform len=${#_body}"
 # ---- route ----
 case "$_platform" in
     qq)
-        . "$_HB/plugin/qq/webhook.sh"
+        . "$_HB/adapter/qq/webhook.sh"
         qq_webhook "$_body" || {
             _err="$_ERROR"
             log_err "router: qq webhook failed: $_err"

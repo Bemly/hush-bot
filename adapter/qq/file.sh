@@ -1,6 +1,6 @@
 # QQ File API
 
-. "$_HB/plugin/qq/system.sh"  # for _qq_call
+. "$_HB/adapter/qq/system.sh"  # for _qq_call
 
 qq_file_upload_group() {
     _gid="$1" _uri="$2" _name="$3" _folder="${4:-}"

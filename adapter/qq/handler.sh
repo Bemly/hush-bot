@@ -4,7 +4,7 @@ handler_ping() {
     _pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
     log_info "handler_ping: from $_uid"
     # Build segments and reply
-    . "$_HB/plugin/qq/message.sh"
+    . "$_HB/adapter/qq/message.sh"
     _msg="$(json_get "$_raw" peer_id)"
     _scene="$(json_get "$_raw" message_scene)"
     if [ "$_scene" = "group" ]; then
@@ -19,7 +19,7 @@ handler_ping() {
 
 handler_echo() {
     _pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
-    . "$_HB/plugin/qq/message.sh"
+    . "$_HB/adapter/qq/message.sh"
     # echo back the same text (strip /echo prefix)
     _clean="$(printf '%s' "$_txt" | sed 's/^\/echo[[:space:]]*//')"
     _segs="$(qq_text_segments "$_clean")"
@@ -34,8 +34,8 @@ handler_echo() {
 
 handler_info() {
     _pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
-    . "$_HB/plugin/qq/system.sh"
-    . "$_HB/plugin/qq/message.sh"
+    . "$_HB/adapter/qq/system.sh"
+    . "$_HB/adapter/qq/message.sh"
     _info="$(qq_system_get_login_info)" || _info="unknown"
     _segs="$(qq_text_segments "Bot info: $_info")"
     _scene="$(json_get "$_raw" message_scene)"
