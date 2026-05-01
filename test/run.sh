@@ -1,5 +1,5 @@
 #!/bin/sh
-# test/run.sh — hush-bot test runner
+# test/run.sh — Ayu.Core test runner
 # Usage: docker run --rm -v $(pwd):/test busybox:musl sh /test/test/run.sh
 
 cd "$(dirname "$0")/.." || exit 1

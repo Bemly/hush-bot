@@ -1,4 +1,4 @@
-# hush-bot config — tokens, endpoints, settings
+# Ayu.Core config — tokens, endpoints, settings
 # Source after core.sh
 
 # ---- QQ (Lagrange.Milky) ----

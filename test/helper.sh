@@ -1,4 +1,4 @@
-# test/helper.sh — test assertion helpers for hush-bot
+# test/helper.sh — test assertion helpers for Ayu.Core
 
 _PASS=0
 _FAIL=0

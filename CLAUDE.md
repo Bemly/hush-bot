@@ -16,13 +16,13 @@ docker run --rm -v $(pwd):/test busybox:musl sh /test/test/run.sh
 ## Repo Structure
 
 ```
-hush-bot/                  # SNS bot framework (this repo)
+Ayu.Core/                  # SNS bot framework (this repo)
 ├── hush-json/             # → git submodule: pure hush JSON interpreter
 ```
 
 ## Submodule
 
-`hush-json/` is a git submodule → https://github.com/Bemly/hush-json. After changes to hush-json, update the pin in hush-bot:
+`hush-json/` is a git submodule → https://github.com/Bemly/hush-json. After changes to hush-json, update the pin in Ayu.Core:
 
 ```sh
 cd hush-json && git pull origin main && cd .. && git add hush-json && git commit -m "update hush-json"
@@ -33,15 +33,15 @@ cd hush-json && git pull origin main && cd .. && git add hush-json && git commit
 **IMPORTANT: After ANY changes to either repo, commit AND push to GitHub immediately.**
 
 - hush-json: https://github.com/Bemly/hush-json
-- hush-bot: https://github.com/Bemly/hush-bot
+- Ayu.Core: https://github.com/Bemly/Ayu.Core
 
 ```sh
 # In hush-json: commit and push
 cd /Users/bemly/cchaha/hush-json
 git add -A && git commit -m "<message>" && git push
 
-# In hush-bot: commit, push, and update submodule if hush-json changed
-cd /Users/bemly/cchaha/hush-bot
+# In Ayu.Core: commit, push, and update submodule if hush-json changed
+cd /Users/bemly/cchaha/Ayu.Core
 git add -A && git commit -m "<message>" && git push
 ```
 

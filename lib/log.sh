@@ -1,4 +1,4 @@
-# log.sh — leveled logging for hush-bot
+# log.sh — leveled logging for Ayu.Core
 # Source after core.sh
 
 # _LOG_LEVEL: 0=trace, 1=info, 2=warn, 3=err only

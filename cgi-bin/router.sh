@@ -1,5 +1,5 @@
 #!/bin/sh
-# router.sh — hush-bot CGI entry point
+# router.sh — Ayu.Core CGI entry point
 # Receives webhook POSTs, routes to platform handlers, dispatches replies.
 # Path: /cgi-bin/router.sh/<platform>
 # Or:   /cgi-bin/router.sh?platform=<platform>

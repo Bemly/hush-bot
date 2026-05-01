@@ -1,4 +1,4 @@
-# hush-bot core — error handling + hush-json bootstrap
+# Ayu.Core core — error handling + hush-json bootstrap
 # Source this first: . ./lib/core.sh
 
 # ---- hush-json ----
