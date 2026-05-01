@@ -1,0 +1,3 @@
+[submodule "lib/hush-json"]
+	path = lib/hush-json
+	url = /Users/bemly/cchaha/hush-json
