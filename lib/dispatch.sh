@@ -5,7 +5,7 @@
 
 dispatch() {
     _pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
-    _rules="${_RULES:-$(pwd)/etc/rules}"
+    _rules="${_RULES:-$_HB/etc/rules}"
 
     if [ ! -f "$_rules" ]; then
         log_warn "dispatch: no rules file at $_rules"
@@ -20,7 +20,7 @@ dispatch() {
         case "$_txt" in
             $_pat)
                 log_info "dispatch: $_txt → $_func (from $_script)"
-                _script="$(pwd)/adapter/$_script"
+                            _script="$_HB/adapter/$_script"
                 if [ -f "$_script" ]; then
                     . "$_script"
                     "$_func" "$_pf" "$_evt" "$_uid" "$_txt" "$_raw" || {

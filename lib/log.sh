@@ -4,7 +4,7 @@
 # _LOG_LEVEL: 0=trace, 1=info, 2=warn, 3=err only
 # Set in etc/config.sh, default to 1 (info)
 _LOG_LEVEL="${_LOG_LEVEL:-1}"
-_LOG_DIR="${_LOG_DIR:-$(pwd)/var/log}"
+_LOG_DIR="${_LOG_DIR:-$_HB/var/log}"
 _LOG_FILE="${_LOG_DIR}/bot.log"
 _ERROR_FILE="${_LOG_DIR}/error.log"
 
