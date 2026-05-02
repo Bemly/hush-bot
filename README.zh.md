@@ -35,8 +35,10 @@ Ayu.Core/
 │   ├── telegram/           # Telegram — 17 文件 (bot/message/chat/admin/inline/...)
 │   └── discord/            # Discord — 17 文件 (message/channel/guild/user/webhook/...)
 ├── etc/                    # config.sh, rules, httpd.conf
-├── plugin/                 # 业务插件 (你的 handler 放这里)
-└── test/                   # 58 tests, 0 failures (mock_wget, 无需 API key)
+├── plugin/                 # 业务插件 — 跨平台消息同步
+│   └── sync.sh             # QQ/Telegram/Discord 消息互转
+├── etc/                    # config.sh, rules, sync.conf, httpd.conf
+└── test/                   # 68 tests, 0 failures (mock_wget, 无需 API key)
 ```
 
 ## 快速开始
@@ -107,16 +109,45 @@ dc_webhook_execute "id" "token" "message"
 ```
 /ping|qq/handler.sh|handler_ping
 /echo|qq/handler.sh|handler_echo
+*|../plugin/sync.sh|sync_handler
 ```
 
-Handler 示例 (`plugin/qq/handler.sh`):
+规则从上到下匹配，先匹配先执行。命令 handler 先命中；末尾的 `*` 兜底，把未匹配的消息交给同步插件转发到其他平台。
+
+Handler 示例 (`adapter/qq/handler.sh`):
 ```sh
 handler_ping() {
+    _pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
     . "$_HB/adapter/qq/message.sh"
     _segs="$(qq_text_segments "pong!")"
-    qq_message_send_private "$3" "$_segs"
+    _scene="$(json_get "$_raw" message_scene)"
+    if [ "$_scene" = "group" ]; then
+        qq_message_send_group "$(json_get "$_raw" group_id)" "$_segs"
+    else
+        qq_message_send_private "$_uid" "$_segs"
+    fi
 }
 ```
+
+## 跨平台消息同步
+
+一个平台的消息可自动转发到另外两个平台。
+
+**1. 配置映射** `etc/sync.conf`：
+
+```
+# 格式: <来源平台>/<来源ID>=<目标平台>/<目标ID>
+qq/group/123456=telegram/-100111
+qq/group/123456=discord/789012
+telegram/-100111=qq/group/123456
+telegram/-100111=discord/789012
+```
+
+**2. 启用**：`etc/rules` 中默认已包含 `*` 规则。
+
+**3. 效果**：Alice 在 QQ 群 123456 发 "hi" → Telegram 出现 `[sync] [qq] Alice: hi`，Discord 同理。
+
+**限制**：Discord→QQ/Telegram 需要 Gateway (WebSocket)，纯 shell 无法实现。QQ↔Telegram 完全双向同步。
 
 ## 错误处理
 
@@ -143,7 +174,7 @@ docker run --rm -v $(pwd):/test busybox:musl hush -c "
 "
 ```
 
-**58 tests, 0 failures** — QQ(14) + Telegram(6) + Discord(26) + HTTP(4) + Dispatch(2) + 其他(6)
+**68 tests, 0 failures** — QQ(14) + Telegram(6) + Discord(26) + HTTP(4) + Dispatch(2) + Sync(10)
 
 ## 性能基准
 

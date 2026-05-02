@@ -35,8 +35,10 @@ Ayu.Core/
 │   ├── telegram/           # Telegram — 17 files (bot/message/chat/admin/...)
 │   └── discord/            # Discord — 17 files (message/channel/guild/user/...)
 ├── etc/                    # config.sh, rules, httpd.conf
-├── plugin/                 # Business logic (your handlers go here)
-└── test/                   # 58 tests, 0 failures (mock_wget, no API keys)
+├── plugin/                 # Business logic — cross-platform sync
+│   └── sync.sh             # Forward messages between QQ/Telegram/Discord
+├── etc/                    # config.sh, rules, sync.conf, httpd.conf
+└── test/                   # 68 tests, 0 failures (mock_wget, no API keys)
 ```
 
 ## Quick Start
@@ -107,16 +109,45 @@ dc_webhook_execute "id" "token" "message"
 ```
 /ping|qq/handler.sh|handler_ping
 /echo|qq/handler.sh|handler_echo
+*|../plugin/sync.sh|sync_handler
 ```
 
-Handler example (`plugin/qq/handler.sh`):
+Rules are matched first-to-last. Command handlers match first; the `*` fallback forwards unmatched messages via the sync plugin.
+
+Handler example (`adapter/qq/handler.sh`):
 ```sh
 handler_ping() {
+    _pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
     . "$_HB/adapter/qq/message.sh"
     _segs="$(qq_text_segments "pong!")"
-    qq_message_send_private "$3" "$_segs"
+    _scene="$(json_get "$_raw" message_scene)"
+    if [ "$_scene" = "group" ]; then
+        qq_message_send_group "$(json_get "$_raw" group_id)" "$_segs"
+    else
+        qq_message_send_private "$_uid" "$_segs"
+    fi
 }
 ```
+
+## Cross-Platform Sync
+
+Messages from one platform can be forwarded to the other two automatically.
+
+**1. Configure mappings** in `etc/sync.conf`:
+
+```
+# Format: <source_pf>/<source_id>=<target_pf>/<target_id>
+qq/group/123456=telegram/-100111
+qq/group/123456=discord/789012
+telegram/-100111=qq/group/123456
+telegram/-100111=discord/789012
+```
+
+**2. Enable** with the `*` rule in `etc/rules` (included by default).
+
+**3. Result**: Alice says "hi" on QQ group 123456 → Telegram `[sync] [qq] Alice: hi` and Discord `[sync] [qq] Alice: hi` appear automatically.
+
+**Limitation**: Discord→QQ/Telegram requires Gateway (WebSocket), not feasible in pure shell. QQ↔Telegram is fully bidirectional.
 
 ## Error Handling
 
@@ -143,7 +174,7 @@ docker run --rm -v $(pwd):/test busybox:musl hush -c "
 "
 ```
 
-**58 tests, 0 failures** — QQ(14) + Telegram(6) + Discord(26) + HTTP(4) + Dispatch(2)
+**68 tests, 0 failures** — QQ(14) + Telegram(6) + Discord(26) + HTTP(4) + Dispatch(2) + Sync(10)
 
 ## Performance
 
