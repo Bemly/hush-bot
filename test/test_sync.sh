@@ -75,8 +75,8 @@ test_sync_no_source_id() {
 }
 
 test_sync_skip_sync_prefix() {
-    sync_handler "qq" "message" "111" "[sync] [tg] Bob: hello" "{}" 2>/dev/null
-    assert_ok "sync skips [sync] prefixed messages"
+    sync_handler "qq" "message" "111" "✈️ Bob: hello" "{}" 2>/dev/null
+    assert_ok "sync skips emoji-prefixed messages"
 }
 
 test_sync_no_config() {

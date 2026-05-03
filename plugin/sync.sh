@@ -87,7 +87,7 @@ sync_handler() {
 	_pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
 
 	# Skip already-synced messages (loop prevention)
-	case "$_txt" in "(sync)"*) return 0 ;; esac
+	case "$_txt" in "🐧"*|"✈️"*|"👾"*) return 0 ;; esac
 
 	# Decode \uXXXX to UTF-8 before processing
 	_txt="$(utf8_decode "$_txt")"
@@ -109,7 +109,8 @@ sync_handler() {
 
 	# Build prefixed text with sender attribution
 	_sender="$(_sync_get_sender "$_pf" "$_raw")"
-	_text="(sync) [$_pf] $_sender: $_txt"
+	case "$_pf" in qq) _icon="🐧" ;; telegram) _icon="✈️" ;; discord) _icon="👾" ;; *) _icon="[$_pf]" ;; esac
+	_text="$_icon $_sender: $_txt"
 
 	# Extract source ID for config lookup
 	_src_id="$(_sync_source_id "$_pf" "$_raw")"
