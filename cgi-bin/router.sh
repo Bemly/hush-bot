@@ -25,8 +25,7 @@ _body="$(dd bs="$CONTENT_LENGTH" 2>/dev/null)"
 # WEBHOOK_SECRET from config.sh; if set, require ?token=<secret> in URL
 if [ -n "${WEBHOOK_SECRET:-}" ]; then
     _token="$(printf '%s' "${QUERY_STRING:-}" | sed 's/.*token=//' | sed 's/&.*//')"
-    # URL-decode common chars (%23→# etc) so URL-safe encoding works
-    _token="$(printf '%s' "$_token" | sed 's/%23/#/g; s/%3C/</g; s/%3E/>/g; s/%3B/;/g; s/%25/%/g')"
+    _token="$(url_decode "$_token")"
     if [ "$_token" != "$WEBHOOK_SECRET" ]; then
         printf 'Content-Type: text/plain\r\n\r\n'
         printf '403 Forbidden'

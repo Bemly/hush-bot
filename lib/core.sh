@@ -7,6 +7,10 @@
 _JSON_HOME="$_HB/hush-json"
 . "$_JSON_HOME/lib/json.sh"
 
+# ---- hush-url ----
+_URL_HOME="$_HB/hush-url"
+. "$_URL_HOME/lib/url.sh"
+
 # ---- global error state ----
 # hush has no trap ERR, no FUNCNAME, no BASH_LINENO.
 # Manual error chain: set _ERROR on failure, propagate up with ||

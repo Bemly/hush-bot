@@ -264,3 +264,70 @@
 [2026-05-01T18:53:41] WARN dispatch: no rules file at /tmp/test-rules.1
 [2026-05-01T18:53:41] INFO tg_webhook: callback data=btn_click
 [2026-05-01T18:53:41] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-02T05:52:09] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-02T05:52:09] INFO handler_ping: from 111
+[2026-05-02T05:52:09] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-02T05:52:09] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-02T05:52:09] WARN http_get retry 3/2: http://fail.example.com
+[2026-05-02T05:52:09] WARN http_post retry 1/2: http://localhost:8080/api/send_group_message
+[2026-05-02T05:52:09] WARN http_post retry 2/2: http://localhost:8080/api/send_group_message
+[2026-05-02T05:52:09] WARN http_post retry 3/2: http://localhost:8080/api/send_group_message
+[2026-05-02T05:52:09] WARN http_post retry 1/2: http://localhost:8080/api/get_login_info
+[2026-05-02T05:52:09] WARN http_post retry 2/2: http://localhost:8080/api/get_login_info
+[2026-05-02T05:52:09] WARN http_post retry 3/2: http://localhost:8080/api/get_login_info
+[2026-05-02T05:52:09] INFO qq_webhook: event=group_nudge
+[2026-05-02T05:52:09] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-02T05:52:09] INFO qq_webhook: event=friend_request
+[2026-05-02T05:52:09] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-02T05:52:09] INFO qq_webhook: event=bot_offline
+[2026-05-02T05:52:09] ERROR qq_webhook: bot offline: kick
+[2026-05-02T05:52:09] INFO qq_webhook: event=weird_custom
+[2026-05-02T05:52:09] WARN http_post retry 1/2: https://api.telegram.org/bot/sendMessage
+[2026-05-02T05:52:09] WARN http_post retry 2/2: https://api.telegram.org/bot/sendMessage
+[2026-05-02T05:52:09] WARN http_post retry 3/2: https://api.telegram.org/bot/sendMessage
+[2026-05-02T05:52:09] ERROR sync: qq→tg fail: tg.sendMessage: http_post failed after 2 retries: https://api.telegram.org/bot/sendMessage ()
+[2026-05-02T05:52:09] INFO tg_webhook: message text=/ping
+[2026-05-02T05:52:09] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-02T05:52:09] INFO tg_webhook: callback data=btn_click
+[2026-05-02T05:52:09] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-02T15:10:10] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-02T15:10:10] INFO handler_ping: from 111
+[2026-05-02T15:10:10] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-02T15:10:10] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-02T15:10:10] WARN http_get retry 3/2: http://fail.example.com
+[2026-05-02T15:10:10] WARN http_post retry 1/2: http://localhost:8080/api/send_group_message
+[2026-05-02T15:10:10] WARN http_post retry 2/2: http://localhost:8080/api/send_group_message
+[2026-05-02T15:10:10] WARN http_post retry 3/2: http://localhost:8080/api/send_group_message
+[2026-05-02T15:10:10] WARN http_post retry 1/2: http://localhost:8080/api/get_login_info
+[2026-05-02T15:10:10] WARN http_post retry 2/2: http://localhost:8080/api/get_login_info
+[2026-05-02T15:10:10] WARN http_post retry 3/2: http://localhost:8080/api/get_login_info
+[2026-05-02T15:10:10] INFO qq_webhook: event=group_nudge
+[2026-05-02T15:10:10] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-02T15:10:10] INFO qq_webhook: event=friend_request
+[2026-05-02T15:10:10] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-02T15:10:10] INFO qq_webhook: event=bot_offline
+[2026-05-02T15:10:10] ERROR qq_webhook: bot offline: kick
+[2026-05-02T15:10:10] INFO qq_webhook: event=weird_custom
+[2026-05-02T15:10:10] WARN http_post retry 1/2: https://api.telegram.org/bot/sendMessage
+[2026-05-02T15:10:10] WARN http_post retry 2/2: https://api.telegram.org/bot/sendMessage
+[2026-05-02T15:10:10] WARN http_post retry 3/2: https://api.telegram.org/bot/sendMessage
+[2026-05-02T15:10:10] ERROR sync: qq→tg fail: tg.sendMessage: http_post failed after 2 retries: https://api.telegram.org/bot/sendMessage ()
+[2026-05-02T15:10:10] INFO tg_webhook: message text=/ping
+[2026-05-02T15:10:10] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-02T15:10:10] INFO tg_webhook: callback data=btn_click
+[2026-05-02T15:10:10] WARN dispatch: no rules file at /tmp/test-rules.1
+[2026-05-02T15:47:01] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-02T15:47:01] INFO handler_ping: from 111
+[2026-05-02T15:47:01] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-02T15:47:01] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-02T15:47:01] WARN http_get retry 3/2: http://fail.example.com
+[2026-05-03T01:40:11] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-03T01:40:11] INFO handler_ping: from 111
+[2026-05-03T01:40:11] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-03T01:40:11] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-03T01:40:11] WARN http_get retry 3/2: http://fail.example.com
+[2026-05-03T03:02:58] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-03T03:02:58] INFO handler_ping: from 111
+[2026-05-03T03:02:58] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-03T03:02:58] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-03T03:02:58] WARN http_get retry 3/2: http://fail.example.com

@@ -11,3 +11,7 @@
 [2026-05-01T18:43:56] ERROR qq_webhook: bot offline: kick
 [2026-05-01T18:48:51] ERROR qq_webhook: bot offline: kick
 [2026-05-01T18:53:41] ERROR qq_webhook: bot offline: kick
+[2026-05-02T05:52:09] ERROR qq_webhook: bot offline: kick
+[2026-05-02T05:52:09] ERROR sync: qq→tg fail: tg.sendMessage: http_post failed after 2 retries: https://api.telegram.org/bot/sendMessage ()
+[2026-05-02T15:10:10] ERROR qq_webhook: bot offline: kick
+[2026-05-02T15:10:10] ERROR sync: qq→tg fail: tg.sendMessage: http_post failed after 2 retries: https://api.telegram.org/bot/sendMessage ()
