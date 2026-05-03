@@ -56,13 +56,19 @@ _sync_source_id() {
 	_pf="$1" _raw="$2"
 	case "$_pf" in
 	qq)
-		_scene="$(json_get "$_raw" message_scene)"
-		if [ "$_scene" = "group" ]; then
-			_gid="$(json_get "$_raw" group_id)"
+		# group_nudge / member_join: group_id only, no message_scene
+		_gid="$(json_get "$_raw" group_id)"
+		if [ -n "$_gid" ] && [ "$_gid" != "NOTFOUND" ]; then
 			printf 'group/%s' "$_gid"
 		else
-			_pid="$(json_get "$_raw" peer_id)"
-			printf 'private/%s' "$_pid"
+			_scene="$(json_get "$_raw" message_scene)"
+			if [ "$_scene" = "group" ]; then
+				_gid="$(json_get "$_raw" group_id)"
+				printf 'group/%s' "$_gid"
+			else
+				_pid="$(json_get "$_raw" peer_id)"
+				printf 'private/%s' "$_pid"
+			fi
 		fi
 		;;
 	telegram)
@@ -79,11 +85,17 @@ _sync_source_id() {
 sync_handler() {
 	_pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
 
-	# Only sync message events
-	[ "$_evt" != "message" ] && return 0
-
 	# Skip already-synced messages (loop prevention)
 	case "$_txt" in "[sync]"*) return 0 ;; esac
+
+	# Map non-message events to descriptive text
+	case "$_evt" in
+		group_nudge) _txt="[戳一戳]" ;;
+		member_join) _txt="[新成员加入]" ;;
+		member_leave) _txt="[成员离开]" ;;
+		friend_request) _txt="[好友请求]" ;;
+		message_recall) _txt="[撤回消息]" ;;
+	esac
 
 	_conf="${_SYNC_CONF:-$_HB/etc/sync.conf}"
 	if [ ! -f "$_conf" ]; then

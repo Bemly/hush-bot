@@ -47,9 +47,31 @@ test_sync_telegram_to_discord() {
     rm -f "$_SYNC_CONF"
 }
 
-test_sync_skip_non_message() {
-    sync_handler "qq" "group_nudge" "111" "nudge" "{}" 2>/dev/null
-    assert_ok "sync skips non-message events"
+test_sync_group_nudge() {
+    _SYNC_CONF="/tmp/sync-test-$$.conf"
+    printf 'qq/group/100=telegram/-200\n' > "$_SYNC_CONF"
+    mock_set '{"ok":true,"result":{"message_id":99}}'
+
+    _raw='{"group_id":100,"sender_id":111,"receiver_id":222}'
+    sync_handler "qq" "group_nudge" "111" "nudge" "$_raw" 2>/dev/null
+    assert_ok "sync group_nudge → [戳一戳]"
+    rm -f "$_SYNC_CONF"
+}
+
+test_sync_member_leave() {
+    _SYNC_CONF="/tmp/sync-test-$$.conf"
+    printf 'qq/group/100=telegram/-200\n' > "$_SYNC_CONF"
+    mock_set '{"ok":true,"result":{"message_id":99}}'
+
+    _raw='{"group_id":100,"user_id":333}'
+    sync_handler "qq" "member_leave" "333" "leave" "$_raw" 2>/dev/null
+    assert_ok "sync member_leave → [成员离开]"
+    rm -f "$_SYNC_CONF"
+}
+
+test_sync_no_source_id() {
+    sync_handler "qq" "message" "111" "hello" "{}" 2>/dev/null
+    assert_ok "sync returns ok when cannot determine source"
 }
 
 test_sync_skip_sync_prefix() {
@@ -100,7 +122,8 @@ test_sync_qq_to_telegram
 test_sync_qq_to_discord
 test_sync_telegram_to_qq
 test_sync_telegram_to_discord
-test_sync_skip_non_message
+test_sync_group_nudge
+test_sync_member_leave
 test_sync_skip_sync_prefix
 test_sync_no_config
 test_sync_missing_config_file

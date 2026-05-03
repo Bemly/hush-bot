@@ -31,6 +31,18 @@ test_webhook_unknown_event() {
     assert_ok "webhook unknown event doesnt crash"
 }
 
+test_webhook_member_decrease() {
+    _event='{"time":1,"self_id":1,"event_type":"group_member_decrease","data":{"group_id":100,"user_id":333}}'
+    qq_webhook "$_event" 2>/dev/null
+    assert_ok "webhook group_member_decrease parsed"
+}
+
+test_webhook_message_recall() {
+    _event='{"time":1,"self_id":1,"event_type":"message_recall","data":{"message_scene":"group","peer_id":100,"message_seq":5,"sender_id":111,"operator_id":222,"display_suffix":""}}'
+    qq_webhook "$_event" 2>/dev/null
+    assert_ok "webhook message_recall parsed"
+}
+
 test_qq_extract_image() {
 	_r="$(qq_extract_text '{"segments":[{"type":"image","data":{"resource_id":"r1","temp_url":"http://x","width":800,"height":600}}]}')"
 	assert_eq "$_r" "[图片]" "extract image segment"
@@ -101,4 +113,6 @@ test_webhook_message_receive
 test_webhook_group_nudge
 test_webhook_friend_request
 test_webhook_bot_offline
+test_webhook_member_decrease
+test_webhook_message_recall
 test_webhook_unknown_event

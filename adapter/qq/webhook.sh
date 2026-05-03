@@ -38,6 +38,18 @@ qq_webhook() {
             _gid="$(json_get "$_data" group_id)"
             dispatch "qq" "member_join" "$_uid" "join:$_gid" "$_data"
             ;;
+        group_member_decrease)
+            _data="$(json_get "$_raw" data)"
+            _uid="$(json_get "$_data" user_id)"
+            _gid="$(json_get "$_data" group_id)"
+            dispatch "qq" "member_leave" "$_uid" "leave:$_gid" "$_data"
+            ;;
+        message_recall)
+            _data="$(json_get "$_raw" data)"
+            _sid="$(json_get "$_data" sender_id)"
+            _gid="$(json_get "$_data" peer_id)"
+            dispatch "qq" "message_recall" "$_sid" "recall:$_gid" "$_data"
+            ;;
         bot_offline)
             _data="$(json_get "$_raw" data)"
             _reason="$(json_get "$_data" reason)"
