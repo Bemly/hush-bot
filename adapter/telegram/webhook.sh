@@ -1,35 +1,174 @@
 # Telegram webhook — parse update events
 
-# Extract nested JSON value using sed (avoids $() subshell pipe issue)
-_tg_nested() {
-    _obj="$1" _key="$2"
-    printf '%s' "$_obj" | sed -n 's/.*"'"$_key"'":{"\([^}]*\)"}.*/\1/p'
-    # More robust: extract the sub-object, then get the field
-    _sub="$(printf '%s' "$_obj" | sed -n 's/.*"'"$_key"'":{\([^}]*\)}.*/\1/p')"
-    [ -n "$_sub" ] && printf '%s' "$_sub" | sed -n 's/.*"'"$3"'":\([^,}]*\).*/\1/p' | sed 's/"//g;s/ //g'
+# Extract descriptive text from a Telegram Message object
+# Handles all content types: text, caption, photo, video, voice, sticker, etc.
+tg_extract_text() {
+	_msg="$1"
+
+	# 1. Plain text
+	_txt="$(json_get "$_msg" text 2>/dev/null)" || _txt=""
+	if [ -n "$_txt" ] && [ "$_txt" != "NOTFOUND" ]; then
+		printf '%s' "$_txt"
+		return
+	fi
+
+	# 2. Caption (for media with description)
+	_cap="$(json_get "$_msg" caption 2>/dev/null)" || _cap=""
+	[ "$_cap" = "NOTFOUND" ] && _cap=""
+
+	# 3. Detect media type and build label
+	_label=""
+
+	# photo
+	_ph="$(json_get "$_msg" photo 2>/dev/null)" || _ph=""
+	if [ -n "$_ph" ] && [ "$_ph" != "NOTFOUND" ]; then
+		_label="[图片]"
+	fi
+
+	# voice
+	if [ -z "$_label" ]; then
+		_vc="$(json_get "$_msg" voice 2>/dev/null)" || _vc=""
+		[ -n "$_vc" ] && [ "$_vc" != "NOTFOUND" ] && _label="[语音]"
+	fi
+
+	# video
+	if [ -z "$_label" ]; then
+		_vd="$(json_get "$_msg" video 2>/dev/null)" || _vd=""
+		[ -n "$_vd" ] && [ "$_vd" != "NOTFOUND" ] && _label="[视频]"
+	fi
+
+	# video_note
+	if [ -z "$_label" ]; then
+		_vn="$(json_get "$_msg" video_note 2>/dev/null)" || _vn=""
+		[ -n "$_vn" ] && [ "$_vn" != "NOTFOUND" ] && _label="[视频笔记]"
+	fi
+
+	# animation (GIF)
+	if [ -z "$_label" ]; then
+		_an="$(json_get "$_msg" animation 2>/dev/null)" || _an=""
+		[ -n "$_an" ] && [ "$_an" != "NOTFOUND" ] && _label="[动画]"
+	fi
+
+	# audio
+	if [ -z "$_label" ]; then
+		_au="$(json_get "$_msg" audio 2>/dev/null)" || _au=""
+		if [ -n "$_au" ] && [ "$_au" != "NOTFOUND" ]; then
+			_title="$(json_get "$_au" title 2>/dev/null)" || _title=""
+			if [ -n "$_title" ] && [ "$_title" != "NOTFOUND" ]; then
+				_label="[音频: $_title]"
+			else
+				_label="[音频]"
+			fi
+		fi
+	fi
+
+	# document (file)
+	if [ -z "$_label" ]; then
+		_dc="$(json_get "$_msg" document 2>/dev/null)" || _dc=""
+		if [ -n "$_dc" ] && [ "$_dc" != "NOTFOUND" ]; then
+			_fn="$(json_get "$_dc" file_name 2>/dev/null)" || _fn=""
+			if [ -n "$_fn" ] && [ "$_fn" != "NOTFOUND" ]; then
+				_label="[文件: $_fn]"
+			else
+				_label="[文件]"
+			fi
+		fi
+	fi
+
+	# sticker
+	if [ -z "$_label" ]; then
+		_st="$(json_get "$_msg" sticker 2>/dev/null)" || _st=""
+		if [ -n "$_st" ] && [ "$_st" != "NOTFOUND" ]; then
+			_emoji="$(json_get "$_st" emoji 2>/dev/null)" || _emoji=""
+			if [ -n "$_emoji" ] && [ "$_emoji" != "NOTFOUND" ]; then
+				_label="[贴纸: $_emoji]"
+			else
+				_label="[贴纸]"
+			fi
+		fi
+	fi
+
+	# location
+	if [ -z "$_label" ]; then
+		_lc="$(json_get "$_msg" location 2>/dev/null)" || _lc=""
+		[ -n "$_lc" ] && [ "$_lc" != "NOTFOUND" ] && _label="[位置]"
+	fi
+
+	# contact
+	if [ -z "$_label" ]; then
+		_ct="$(json_get "$_msg" contact 2>/dev/null)" || _ct=""
+		[ -n "$_ct" ] && [ "$_ct" != "NOTFOUND" ] && _label="[联系人]"
+	fi
+
+	# dice
+	if [ -z "$_label" ]; then
+		_di="$(json_get "$_msg" dice 2>/dev/null)" || _di=""
+		[ -n "$_di" ] && [ "$_di" != "NOTFOUND" ] && _label="[骰子]"
+	fi
+
+	# poll
+	if [ -z "$_label" ]; then
+		_pl="$(json_get "$_msg" poll 2>/dev/null)" || _pl=""
+		[ -n "$_pl" ] && [ "$_pl" != "NOTFOUND" ] && _label="[投票]"
+	fi
+
+	# venue
+	if [ -z "$_label" ]; then
+		_vn="$(json_get "$_msg" venue 2>/dev/null)" || _vn=""
+		[ -n "$_vn" ] && [ "$_vn" != "NOTFOUND" ] && _label="[地点]"
+	fi
+
+	# game
+	if [ -z "$_label" ]; then
+		_gm="$(json_get "$_msg" game 2>/dev/null)" || _gm=""
+		[ -n "$_gm" ] && [ "$_gm" != "NOTFOUND" ] && _label="[游戏]"
+	fi
+
+	# Build output: [label] + caption text
+	if [ -n "$_cap" ]; then
+		printf '%s %s' "$_label" "$_cap"
+	else
+		printf '%s' "$_label"
+	fi
+}
+
+# Handle a Message update (message / channel_post / edited_message)
+_tg_dispatch_msg() {
+	_msg="$1" _evt="$2"
+	_txt="$(tg_extract_text "$_msg")"
+	log_info "tg_webhook: $_evt text=$_txt"
+	dispatch "telegram" "message" "" "$_txt" "$_msg"
 }
 
 tg_webhook() {
-    _raw="$1"
+	_raw="$1"
 
-    _msg="$(json_get "$_raw" message 2>/dev/null)" || _msg=""
-    if [ -n "$_msg" ] && [ "$_msg" != "NOTFOUND" ]; then
-        # Pass the raw message object to dispatch — handler extracts what it needs
-        _txt="$(json_get "$_msg" text 2>/dev/null)" || _txt=""
-        [ "$_txt" = "NOTFOUND" ] && _txt=""
-        log_info "tg_webhook: message text=$_txt"
-        dispatch "telegram" "message" "" "$_txt" "$_msg"
-        return 0
-    fi
+	_msg="$(json_get "$_raw" message 2>/dev/null)" || _msg=""
+	if [ -n "$_msg" ] && [ "$_msg" != "NOTFOUND" ]; then
+		_tg_dispatch_msg "$_msg" "message"
+		return 0
+	fi
 
-    _cb="$(json_get "$_raw" callback_query 2>/dev/null)" || _cb=""
-    if [ -n "$_cb" ] && [ "$_cb" != "NOTFOUND" ]; then
-        _data="$(json_get "$_cb" data 2>/dev/null)" || _data=""
-        log_info "tg_webhook: callback data=$_data"
-        dispatch "telegram" "callback" "" "$_data" "$_cb"
-        return 0
-    fi
+	_msg="$(json_get "$_raw" channel_post 2>/dev/null)" || _msg=""
+	if [ -n "$_msg" ] && [ "$_msg" != "NOTFOUND" ]; then
+		_tg_dispatch_msg "$_msg" "channel_post"
+		return 0
+	fi
 
-    log_debug "tg_webhook: unhandled update type"
-    return 0
+	_msg="$(json_get "$_raw" edited_message 2>/dev/null)" || _msg=""
+	if [ -n "$_msg" ] && [ "$_msg" != "NOTFOUND" ]; then
+		_tg_dispatch_msg "$_msg" "edited_message"
+		return 0
+	fi
+
+	_cb="$(json_get "$_raw" callback_query 2>/dev/null)" || _cb=""
+	if [ -n "$_cb" ] && [ "$_cb" != "NOTFOUND" ]; then
+		_data="$(json_get "$_cb" data 2>/dev/null)" || _data=""
+		log_info "tg_webhook: callback data=$_data"
+		dispatch "telegram" "callback" "" "$_data" "$_cb"
+		return 0
+	fi
+
+	log_debug "tg_webhook: unhandled update type"
+	return 0
 }

@@ -31,6 +31,72 @@ test_webhook_unknown_event() {
     assert_ok "webhook unknown event doesnt crash"
 }
 
+test_qq_extract_image() {
+	_r="$(qq_extract_text '{"segments":[{"type":"image","data":{"resource_id":"r1","temp_url":"http://x","width":800,"height":600}}]}')"
+	assert_eq "$_r" "[图片]" "extract image segment"
+}
+
+test_qq_extract_face() {
+	_r="$(qq_extract_text '{"segments":[{"type":"face","data":{"face_id":1}}]}')"
+	assert_eq "$_r" "[表情]" "extract face segment"
+}
+
+test_qq_extract_record() {
+	_r="$(qq_extract_text '{"segments":[{"type":"record","data":{"resource_id":"r1","duration":5}}]}')"
+	assert_eq "$_r" "[语音]" "extract voice segment"
+}
+
+test_qq_extract_video() {
+	_r="$(qq_extract_text '{"segments":[{"type":"video","data":{"resource_id":"r1","width":800,"height":600,"duration":30}}]}')"
+	assert_eq "$_r" "[视频]" "extract video segment"
+}
+
+test_qq_extract_file() {
+	_r="$(qq_extract_text '{"segments":[{"type":"file","data":{"file_id":"f1","file_name":"doc.pdf","file_size":1024}}]}')"
+	assert_eq "$_r" "[文件: doc.pdf]" "extract file segment with name"
+}
+
+test_qq_extract_mention() {
+	_r="$(qq_extract_text '{"segments":[{"type":"mention","data":{"user_id":123456}}]}')"
+	assert_eq "$_r" "@123456" "extract mention segment"
+}
+
+test_qq_extract_mention_all() {
+	_r="$(qq_extract_text '{"segments":[{"type":"mention_all","data":{}}]}')"
+	assert_eq "$_r" "@所有人" "extract mention_all segment"
+}
+
+test_qq_extract_reply() {
+	_r="$(qq_extract_text '{"segments":[{"type":"reply","data":{"message_seq":100}}]}')"
+	assert_eq "$_r" "[回复]" "extract reply segment"
+}
+
+test_qq_extract_forward() {
+	_r="$(qq_extract_text '{"segments":[{"type":"forward","data":{"forward_id":"fw1"}}]}')"
+	assert_eq "$_r" "[转发]" "extract forward segment"
+}
+
+test_qq_extract_mixed() {
+	_r="$(qq_extract_text '{"segments":[{"type":"text","data":{"text":"look"}},{"type":"image","data":{"resource_id":"r1"}}]}')"
+	assert_eq "$_r" "look [图片]" "extract text+image mixed"
+}
+
+test_qq_extract_empty() {
+	_r="$(qq_extract_text '{"segments":[]}')"
+	assert_eq "$_r" "" "extract empty segments"
+}
+
+test_qq_extract_image
+test_qq_extract_face
+test_qq_extract_record
+test_qq_extract_video
+test_qq_extract_file
+test_qq_extract_mention
+test_qq_extract_mention_all
+test_qq_extract_reply
+test_qq_extract_forward
+test_qq_extract_mixed
+test_qq_extract_empty
 test_webhook_message_receive
 test_webhook_group_nudge
 test_webhook_friend_request

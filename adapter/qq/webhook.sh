@@ -49,11 +49,84 @@ qq_webhook() {
     esac
 }
 
-# Extract plain text from QQ message segments
-# Uses sed to extract text from segments array (avoids pipe/subshell issues)
+# Extract descriptive text from QQ message segments (all 15 types)
+# Order: text → face → image → record → video → file → mention →
+#        mention_all → reply → forward → market_face → light_app → xml
 qq_extract_text() {
     _msg="$1"
     _segs="$(json_get "$_msg" segments)" || { echo ""; return; }
-    # Extract all "text":"..." values from the segments array
-    printf '%s' "$_segs" | sed -n 's/.*"type":"text"[^}]*"text":"\([^"]*\)".*/\1/p'
+
+    _out=""
+    _sp=""
+
+    # text — extract content from "text":"..."
+    _txt="$(printf '%s' "$_segs" | sed -n 's/.*"type":"text"[^}]*"text":"\([^"]*\)".*/\1/p')"
+    if [ -n "$_txt" ]; then
+        _out="$_out$_sp$_txt"
+        _sp=" "
+    fi
+
+    # face
+    if printf '%s' "$_segs" | grep -q '"type":"face"'; then
+        _out="$_out$_sp[表情]"; _sp=" "
+    fi
+
+    # image
+    if printf '%s' "$_segs" | grep -q '"type":"image"'; then
+        _out="$_out$_sp[图片]"; _sp=" "
+    fi
+
+    # record
+    if printf '%s' "$_segs" | grep -q '"type":"record"'; then
+        _out="$_out$_sp[语音]"; _sp=" "
+    fi
+
+    # video
+    if printf '%s' "$_segs" | grep -q '"type":"video"'; then
+        _out="$_out$_sp[视频]"; _sp=" "
+    fi
+
+    # file — extract file_name
+    _fn="$(printf '%s' "$_segs" | sed -n 's/.*"type":"file"[^}]*"file_name":"\([^"]*\)".*/\1/p')"
+    if [ -n "$_fn" ]; then
+        _out="$_out$_sp[文件: $_fn]"; _sp=" "
+    fi
+
+    # mention — extract user_id
+    _uid="$(printf '%s' "$_segs" | sed -n 's/.*"type":"mention"[^}]*"user_id":\([0-9]*\).*/@\1/p')"
+    if [ -n "$_uid" ]; then
+        _out="$_out$_sp$_uid"; _sp=" "
+    fi
+
+    # mention_all
+    if printf '%s' "$_segs" | grep -q '"type":"mention_all"'; then
+        _out="$_out$_sp@所有人"; _sp=" "
+    fi
+
+    # reply
+    if printf '%s' "$_segs" | grep -q '"type":"reply"'; then
+        _out="$_out$_sp[回复]"; _sp=" "
+    fi
+
+    # forward
+    if printf '%s' "$_segs" | grep -q '"type":"forward"'; then
+        _out="$_out$_sp[转发]"; _sp=" "
+    fi
+
+    # market_face
+    if printf '%s' "$_segs" | grep -q '"type":"market_face"'; then
+        _out="$_out$_sp[商城表情]"; _sp=" "
+    fi
+
+    # light_app
+    if printf '%s' "$_segs" | grep -q '"type":"light_app"'; then
+        _out="$_out$_sp[小程序]"; _sp=" "
+    fi
+
+    # xml
+    if printf '%s' "$_segs" | grep -q '"type":"xml"'; then
+        _out="$_out$_sp[卡片消息]"; _sp=" "
+    fi
+
+    printf '%s' "$_out"
 }
