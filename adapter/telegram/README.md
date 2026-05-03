@@ -35,6 +35,146 @@ _No parameters_
 | timeout | Integer | No |
 | allowed_updates | Array of String | No |
 
+---
+
+## Incoming Webhook (Update)
+
+Webhook POST payload is a JSON `Update` object via `application/json`. If multiple fields are present, only **one** non-optional field is possible per update.
+
+```json
+{
+  "update_id": 123456789,
+  "message": { ... },
+  "callback_query": { ... }
+}
+```
+
+### Update Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `update_id` | Integer | Unique update identifier, monotonically increasing |
+| `message` | Message | *(optional)* New incoming message — text, photo, sticker, etc. |
+| `edited_message` | Message | *(optional)* Edited message |
+| `channel_post` | Message | *(optional)* New incoming channel post |
+| `edited_channel_post` | Message | *(optional)* Edited channel post |
+| `callback_query` | CallbackQuery | *(optional)* Inline button callback |
+| `inline_query` | InlineQuery | *(optional)* Inline query |
+| `chosen_inline_result` | ChosenInlineResult | *(optional)* Inline result chosen |
+| `my_chat_member` | ChatMemberUpdated | *(optional)* Bot's chat member status changed |
+| `chat_member` | ChatMemberUpdated | *(optional)* Chat member status changed |
+| `chat_join_request` | ChatJoinRequest | *(optional)* Chat join request |
+| `chat_boost` | ChatBoostUpdated | *(optional)* Chat boost added or changed |
+| `removed_chat_boost` | ChatBoostRemoved | *(optional)* Chat boost removed |
+| `poll` | Poll | *(optional)* Poll state change (stopped polls only) |
+| `poll_answer` | PollAnswer | *(optional)* User changed poll answer |
+| `message_reaction` | MessageReactionUpdated | *(optional)* Reaction changed |
+| `message_reaction_count` | MessageReactionCountUpdated | *(optional)* Anonymous reaction count changed |
+| `shipping_query` | ShippingQuery | *(optional)* Shipping query (invoices) |
+| `pre_checkout_query` | PreCheckoutQuery | *(optional)* Pre-checkout query |
+| `purchased_paid_media` | PaidMediaPurchased | *(optional)* Paid media purchased |
+
+---
+
+## Message Object
+
+Sent in `message` / `edited_message` / `channel_post` Update fields.
+
+### Core Fields (always present)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `message_id` | Integer | Unique message identifier in this chat |
+| `date` | Integer | Unix timestamp the message was sent |
+| `chat` | Chat | Chat the message belongs to |
+| `from` | User | *(optional)* Sender (may be empty for channel posts) |
+| `sender_chat` | Chat | *(optional)* Sender when sent on behalf of a chat |
+
+### Content Type Detection
+
+At most **one** of these fields is present. Use this to detect message type:
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `text` | String | Text message |
+| `animation` | Animation | GIF animation (also sets `document` field) |
+| `audio` | Audio | Audio file |
+| `document` | Document | General file |
+| `photo` | Array\<PhotoSize\> | Photo (only if `animation` not set) |
+| `sticker` | Sticker | Sticker |
+| `story` | Story | Forwarded story |
+| `video` | Video | Video |
+| `video_note` | VideoNote | Video note (round video) |
+| `voice` | Voice | Voice message |
+| `contact` | Contact | Shared contact |
+| `dice` | Dice | Dice with random value |
+| `game` | Game | Game |
+| `poll` | Poll | Native poll |
+| `venue` | Venue | Venue (also sets `location` field) |
+| `location` | Location | Shared location |
+| `checklist` | Checklist | Checklist |
+| `paid_media` | PaidMediaInfo | Paid media |
+
+**caption**: Media messages (photo/video/voice/document/animation/audio) may have `caption` instead of `text`.
+
+### Service Message Fields
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `new_chat_members` | Array\<User\> | Members joined group |
+| `left_chat_member` | User | Member left group |
+| `new_chat_title` | String | Chat title changed |
+| `new_chat_photo` | Array\<PhotoSize\> | Chat photo changed |
+| `delete_chat_photo` | True | Chat photo deleted |
+| `group_chat_created` | True | Group created |
+| `supergroup_chat_created` | True | Supergroup created |
+| `channel_chat_created` | True | Channel created |
+| `message_auto_delete_timer_changed` | MessageAutoDeleteTimerChanged | Auto-delete timer changed |
+| `migrate_to_chat_id` | Integer | Group migrated to supergroup |
+| `migrate_from_chat_id` | Integer | Group migrated from |
+| `pinned_message` | Message | Message was pinned |
+| `connected_website` | String | Connected website |
+| `successful_payment` | SuccessfulPayment | Payment received |
+| `users_shared` | UsersShared | Users shared |
+| `chat_shared` | ChatShared | Chat shared |
+| `forum_topic_created` | ForumTopicCreated | Forum topic created |
+| `forum_topic_closed` | ForumTopicClosed | Forum topic closed |
+| `forum_topic_reopened` | ForumTopicReopened | Forum topic reopened |
+| `forum_topic_edited` | ForumTopicEdited | Forum topic edited |
+| `video_chat_scheduled` | VideoChatScheduled | Video chat scheduled |
+| `video_chat_started` | VideoChatStarted | Video chat started |
+| `video_chat_ended` | VideoChatEnded | Video chat ended |
+| `video_chat_participants_invited` | VideoChatParticipantsInvited | Participants invited |
+| `write_access_allowed` | WriteAccessAllowed | Write access allowed |
+| `giveaway_created` | GiveawayCreated | Giveaway created |
+| `giveaway_completed` | GiveawayCompleted | Giveaway completed |
+| `giveaway_winners` | GiveawayWinners | Giveaway winners |
+
+### Additional Content Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `caption` | String | *(optional)* Caption for media (animation/audio/document/photo/video/voice) |
+| `caption_entities` | Array\<MessageEntity\> | *(optional)* Entities in caption |
+| `entities` | Array\<MessageEntity\> | *(optional)* Entities in `text` |
+| `reply_to_message` | Message | *(optional)* Replied message (no recursive nesting) |
+| `forward_origin` | MessageOrigin | *(optional)* Forward origin info |
+| `media_group_id` | String | *(optional)* Media group this message belongs to |
+
+### CallbackQuery Object
+
+Sent in `callback_query` Update field.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | String | Unique callback query identifier |
+| `from` | User | User who pressed the button |
+| `message` | Message | *(optional)* Message with the inline keyboard |
+| `inline_message_id` | String | *(optional)* Inline message identifier |
+| `chat_instance` | String | Global chat identifier |
+| `data` | String | *(optional)* Data associated with the callback button |
+| `game_short_name` | String | *(optional)* Short name of a Game |
+
 
 ## Webhook
 
