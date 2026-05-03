@@ -21,6 +21,17 @@ _CT="${CONTENT_TYPE:-}"
 # read body from stdin
 _body="$(dd bs="$CONTENT_LENGTH" 2>/dev/null)"
 
+# ---- auth check ----
+# WEBHOOK_SECRET from config.sh; if set, require ?token=<secret> in URL
+if [ -n "${WEBHOOK_SECRET:-}" ]; then
+    _token="$(printf '%s' "${QUERY_STRING:-}" | sed 's/.*token=//' | sed 's/&.*//')"
+    if [ "$_token" != "$WEBHOOK_SECRET" ]; then
+        printf 'Content-Type: text/plain\r\n\r\n'
+        printf '403 Forbidden'
+        exit 0
+    fi
+fi
+
 # detect platform from URL path or query string
 _platform=""
 case "$_URI" in

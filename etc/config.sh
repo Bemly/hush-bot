@@ -22,6 +22,9 @@ DC_API_BASE="https://discord.com/api/v10"
 BOT_PORT="${BOT_PORT:-6160}"
 BOT_HOST="${BOT_HOST:-0.0.0.0}"
 
+# Webhook auth: if set, require ?token=<secret> in webhook URL
+WEBHOOK_SECRET="${WEBHOOK_SECRET:-}"
+
 # ---- Logging ----
 _LOG_LEVEL="${_LOG_LEVEL:-1}"    # 0=trace, 1=info, 2=warn, 3=err
 _LOG_DIR="${_LOG_DIR:-$_HB/var/log}"
