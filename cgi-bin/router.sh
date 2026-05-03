@@ -33,9 +33,10 @@ if [ -n "${WEBHOOK_SECRET:-}" ]; then
     fi
 fi
 
-# detect platform from URL path or query string
+# detect platform from URL path (strip query string first)
 _platform=""
-case "$_URI" in
+_path="${_URI%%\?*}"
+case "$_path" in
     */qq|*/qq/*) _platform="qq" ;;
     */telegram|*/telegram/*) _platform="telegram" ;;
     */discord|*/discord/*) _platform="discord" ;;
