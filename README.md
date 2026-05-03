@@ -21,24 +21,23 @@ Request flow:
   Platform → webhook → httpd CGI → router.sh → adapter → dispatch.sh → handler → adapter → wget → Platform
 
 Ayu.Core/
-├── hush-json/              # submodule — pure hush JSON interpreter
 ├── cgi-bin/                # CGI scripts (busybox httpd hardcodes /cgi-bin/)
 │   ├── start.sh            # Launch httpd
-│   └── router.sh           # CGI entry point (platform routing)
+│   └── router.sh           # CGI entry (platform routing + token auth)
 ├── lib/
-│   ├── core.sh             # _ERROR chain, die(), hush-json bootstrap
-│   ├── http.sh             # wget wrapper (GET/POST, retry, timeout)
-│   ├── dispatch.sh         # Message routing + plugin interface
-│   └── log.sh              # Leveled logging (debug/info/warn/err)
+│   ├── core.sh             # _ERROR chain, die(), hush-json + hush-url bootstrap
+│   ├── http.sh             # wget wrapper (GET/POST, retry, proxy auto-detect)
+│   ├── dispatch.sh         # Message routing + plugin interface (etc/rules)
+│   ├── log.sh              # Leveled logging (debug/info/warn/err)
+│   └── url.sh              # url_encode/decode + utf8_decode (\uXXXX→UTF-8)
 ├── adapter/                # Platform adapters
-│   ├── qq/                 # QQ — 6 files (system/message/group/friend/file/webhook)
-│   ├── telegram/           # Telegram — 17 files (bot/message/chat/admin/...)
-│   └── discord/            # Discord — 17 files (message/channel/guild/user/...)
-├── etc/                    # config.sh, rules, httpd.conf
-├── plugin/                 # Business logic — cross-platform sync
-│   └── sync.sh             # Forward messages between QQ/Telegram/Discord
-├── etc/                    # config.sh, rules, sync.conf, httpd.conf
-└── test/                   # 68 tests, 0 failures (mock_wget, no API keys)
+│   ├── qq/                 # QQ — 6 files, 15 segment types, 8 event types
+│   ├── telegram/           # Telegram — 17 files, 20 Update types, 18 content types
+│   └── discord/            # Discord — 17 files (REST only)
+├── plugin/                 # Business logic
+│   └── sync.sh             # Cross-platform sync (🐧✈️👾 emoji icons)
+├── etc/                    # config.sh, rules, sync.conf, config.nas.sh (gitignored)
+└── test/                   # 129 tests, 0 failures (mock_wget, no API keys)
 ```
 
 ## Quick Start
@@ -48,45 +47,42 @@ Ayu.Core/
 docker build -t ayu-core .
 
 # Run
-docker run -d -p 8080:8080 --name ayu ayu-core
+docker run -d -p 6160:6160 --name ayu ayu-core
 
 # QQ webhook
-curl -X POST http://localhost:8080/cgi-bin/router.sh/qq \
+curl -X POST http://localhost:6160/cgi-bin/router.sh/qq \
   -H 'Content-Type: application/json' \
   -d '{"event_type":"message_receive","data":{"sender_id":111,"message_scene":"friend","segments":[{"type":"text","data":{"text":"/ping"}}]}}'
 # → {"status":"ok"}
 
 # Telegram webhook
-curl -X POST http://localhost:8080/cgi-bin/router.sh/telegram \
+curl -X POST http://localhost:6160/cgi-bin/router.sh/telegram \
   -H 'Content-Type: application/json' \
   -d '{"update_id":1,"message":{"from":{"id":111},"chat":{"id":222},"text":"/ping"}}'
 # → {"status":"ok"}
-
-# Discord webhook (no Bot token needed)
-dc_webhook_execute "<id>" "<token>" "hello from Ayu.Core"
 ```
 
 ## Configuration
 
 ```sh
-# etc/config.sh
-# QQ (Lagrange.Milky) — use host.docker.internal for bridge, 127.0.0.1 for host
-QQ_HOST="host.docker.internal"
+# etc/config.sh — all values can be overridden via environment variables
+QQ_HOST="host.docker.internal"   # bridge: host.docker.internal, host: 127.0.0.1
 QQ_PORT="616"
-QQ_TOKEN="your-qq-token"
+QQ_TOKEN=""                      # set via env or config.nas.sh
 
-# Telegram
-TG_TOKEN="123:abc"
+TG_TOKEN=""                      # Bot token from @BotFather
+TG_API_HOST="api.telegram.org"   # use tghook.bemly.moe (CF Worker) to bypass GFW
+TG_API_SECRET=""                 # X-Ayu-Token header for CF WAF
 
-# Discord
-DC_TOKEN="your-bot-token"
+DC_TOKEN=""
 
-# Bot server
 BOT_PORT="6160"
-WEBHOOK_SECRET=""            # set to require ?token=xxx in webhook URL
-
-_LOG_LEVEL="1"               # 0=trace, 1=info, 2=warn, 3=err
+WEBHOOK_SECRET=""                # if set, require ?token=<secret> in webhook URL
+_LOG_LEVEL="1"                   # 0=trace, 1=info, 2=warn, 3=err
 ```
+
+> Never commit secrets. Use `etc/config.nas.sh` (gitignored) for production values.  
+> See `etc/config.nas.sh` for full production example.
 
 ## Platform APIs
 
@@ -103,9 +99,7 @@ tg_sendMessage "222" "hello world" "HTML"
 
 # --- Discord ---
 . ./adapter/discord/message.sh
-. ./adapter/discord/webhook.sh
 dc_message_create "ch1" '{"content":"hello"}'
-dc_webhook_execute "id" "token" "message"
 ```
 
 ## Message Dispatch
@@ -118,42 +112,45 @@ dc_webhook_execute "id" "token" "message"
 *|../plugin/sync.sh|sync_handler
 ```
 
-Rules are matched first-to-last. Command handlers match first; the `*` fallback forwards unmatched messages via the sync plugin.
-
-Handler example (`adapter/qq/handler.sh`):
-```sh
-handler_ping() {
-    _pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
-    . "$_HB/adapter/qq/message.sh"
-    _segs="$(qq_text_segments "pong!")"
-    _scene="$(json_get "$_raw" message_scene)"
-    if [ "$_scene" = "group" ]; then
-        qq_message_send_group "$(json_get "$_raw" group_id)" "$_segs"
-    else
-        qq_message_send_private "$_uid" "$_segs"
-    fi
-}
-```
+Rules are matched first-to-last. Commands match first; the `*` fallback forwards to cross-platform sync.
 
 ## Cross-Platform Sync
 
-Messages from one platform can be forwarded to the other two automatically.
+Messages from one platform auto-forward to the others. Non-text content (images, stickers, voice, etc.) is converted to descriptive labels.
+
+| From→To | Prefix | Loop Prevention |
+|---------|--------|-----------------|
+| QQ→TG | `🐧 用户: 消息` | emoji prefix + bot sender ID |
+| TG→QQ | `✈️ 用户: 消息` | emoji prefix + bot sender ID |
+| →DC | `👾 用户: 消息` | (not implemented) |
+
+**Content types handled**: text, image, sticker, GIF, voice, video, file, reply, forward, location, contact, dice, poll, service messages (join/leave/pin), and more. See adapter READMEs for complete type tables.
 
 **1. Configure mappings** in `etc/sync.conf`:
 
 ```
-# Format: <source_pf>/<source_id>=<target_pf>/<target_id>
-qq/group/123456=telegram/-100111
-qq/group/123456=discord/789012
-telegram/-100111=qq/group/123456
-telegram/-100111=discord/789012
+qq/group/123456=telegram/-100111            # QQ group → TG group
+qq/group/123456=telegram/-100111/16553      # QQ group → TG forum topic
+telegram/-100111=qq/group/123456            # TG group → QQ group
 ```
 
 **2. Enable** with the `*` rule in `etc/rules` (included by default).
 
-**3. Result**: Alice says "hi" on QQ group 123456 → Telegram `[sync] [qq] Alice: hi` and Discord `[sync] [qq] Alice: hi` appear automatically.
+**Limitation**: Discord→QQ/TG requires Gateway (WebSocket), not feasible in pure shell. QQ↔Telegram is fully bidirectional.
 
-**Limitation**: Discord→QQ/Telegram requires Gateway (WebSocket), not feasible in pure shell. QQ↔Telegram is fully bidirectional.
+## Webhook Auth
+
+Set `WEBHOOK_SECRET` to require `?token=<secret>` in all webhook URLs. Router returns 403 without it.
+
+The token supports special characters (`#`, `<`, `;`) via URL encoding — `url_encode`/`url_decode` handle encoding automatically.
+
+## Telegram + GFW Bypass
+
+If `api.telegram.org` is blocked, use a Cloudflare Worker as forward proxy:
+
+1. Create CF Worker that proxies to `api.telegram.org`
+2. Set `TG_API_HOST=your-worker.example.com`
+3. Ayu calls Worker via HTTPS (busybox wget supports TLS 1.0, configure Cloudflare accordingly)
 
 ## Error Handling
 
@@ -168,6 +165,8 @@ json_get "$resp" key || die "missing key"
 # → Ayu.Core ERROR (line 23): missing key
 ```
 
+> **Important**: hush has no local variables. Utility functions must use `$1` `$2` `$3` directly — assigning to named parameters (e.g., `_msg="$3"`) corrupts the caller's variables.
+
 ## Tests
 
 ```sh
@@ -180,27 +179,14 @@ docker run --rm -v $(pwd):/test busybox:musl hush -c "
 "
 ```
 
-**79 tests, 0 failures** — QQ(14) + Telegram(6) + Discord(26) + HTTP(4) + Dispatch(2) + Sync(10) + Log(4) + Auth(5)
-
-## Performance
-
-| Metric | Value |
-|--------|-------|
-| httpd idle memory | ~600 KB |
-| Per CGI request | ~1-2 MB |
-| Bot instance resident | ~5-10 MB |
-| CGI overhead | <10ms |
-| Webhook receive only | ~100-200 req/s |
-| Webhook + API reply | ~1-5 req/s |
-
-Bottleneck: httpd is single-threaded. One slow API call blocks subsequent requests. Fine for personal/small-group bots.
+**129 tests, 0 failures** — QQ(14) + Telegram(6) + Discord(26) + HTTP(4) + Dispatch(2) + Sync(12) + URL(26) + Log(4) + Auth(5) + Webhook(16)
 
 ## Constraints
 
 - **busybox:musl** — no bash, gawk, curl, jq
-- **wget** — GET/POST only
+- **wget** — GET/POST only, TLS 1.0 (needs CF minimum TLS set to 1.0)
 - **httpd CGI** — path hardcoded to `/cgi-bin/`, `H:` does NOT enable CGI
-- **hush** — no arrays, no `trap ERR`, no `FUNCNAME`
+- **hush** — no arrays, no `trap ERR`, no local variables
 - **awk** — var names ≤3 chars, `"\n"` is literal
-- **JSON escapes** — only `\"` and `\\` resolved; `\n` `\t` preserved as-is
+- **JSON escapes** — only `\"` and `\\` resolved natively; `\uXXXX` decoded via `utf8_decode`
 - **$() trap** — functions that set `_ERROR` must not run inside subshells
