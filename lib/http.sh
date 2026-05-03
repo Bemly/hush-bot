@@ -4,6 +4,9 @@
 _HTTP_STATUS=""
 _HTTP_RETRY="${_HTTP_RETRY:-2}"       # retry count
 _HTTP_TIMEOUT="${_HTTP_TIMEOUT:-10}"  # seconds
+# Proxy: if http_proxy env is set, enable wget proxy (-Y on)
+_Y="$_Y"
+[ -n "${http_proxy:-}${https_proxy:-}" ] && _Y="-Y on"
 
 # http_get <url> [header...]
 http_get() {
@@ -16,7 +19,7 @@ http_get() {
 	_try=0
 	while [ $_try -le "$_HTTP_RETRY" ]; do
 		_try=$((_try + 1))
-		eval "_body=\"\$(wget -q -O- -T $_HTTP_TIMEOUT -Y off $_hargs '$_url' 2>$_errf)\""
+		eval "_body=\"\$(wget -q -O- -T $_HTTP_TIMEOUT $_Y $_hargs '$_url' 2>$_errf)\""
 		_rc=$?
 		if [ $_rc -eq 0 ]; then
 			rm -f "$_errf"
@@ -44,7 +47,7 @@ http_post() {
 	_try=0
 	while [ $_try -le "$_HTTP_RETRY" ]; do
 		_try=$((_try + 1))
-		eval "_body=\"\$(wget -q -O- -T $_HTTP_TIMEOUT -Y off --post-file '$_tmp' $_hargs '$_url' 2>$_errf)\""
+		eval "_body=\"\$(wget -q -O- -T $_HTTP_TIMEOUT $_Y --post-file '$_tmp' $_hargs '$_url' 2>$_errf)\""
 		_rc=$?
 		if [ $_rc -eq 0 ]; then
 			rm -f "$_errf" "$_tmp"

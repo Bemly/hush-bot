@@ -12,7 +12,9 @@ QQ_API_BASE="http://${QQ_HOST}:${QQ_PORT}${QQ_PREFIX}api"
 
 # ---- Telegram ----
 TG_TOKEN="${TG_TOKEN:-}"
-TG_API_BASE="https://api.telegram.org/bot${TG_TOKEN}"
+TG_API_HOST="${TG_API_HOST:-api.telegram.org}"
+TG_API_SECRET="${TG_API_SECRET:-}"
+TG_API_BASE="https://${TG_API_HOST}/bot${TG_TOKEN}"
 
 # ---- Discord ----
 DC_TOKEN="${DC_TOKEN:-}"

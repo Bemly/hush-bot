@@ -129,10 +129,17 @@ sync_handler() {
 
 		case "$_tpf" in
 		telegram)
-			tg_sendMessage "$_tid" "$_text" >/dev/null \
+			# Support topic: telegram/<chat_id>/<thread_id>
+			_tcid="${_tid%%/*}"
+			_tthr="${_tid#*/}"
+			if [ "$_tthr" != "$_tcid" ] && [ -n "$_tthr" ]; then
+				_body="$(json_obj "chat_id" "$_tcid" "text" "$_text" "message_thread_id" "$_tthr")"
+			else
+				_body="$(json_obj "chat_id" "$_tcid" "text" "$_text")"
+			fi
+			_tg_api "sendMessage" "$_body" "sync.tg" >/dev/null 
 				|| log_err "sync: $_pf→tg fail: $_ERROR"
-			;;
-		qq)
+			;;		qq)
 			case "$_tid" in
 			group/*)
 				qq_message_send_group "${_tid#group/}" "$_segs" >/dev/null \

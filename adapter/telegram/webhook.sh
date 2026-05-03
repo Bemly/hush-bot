@@ -140,6 +140,28 @@ tg_extract_text() {
 		_prefix="$_prefix[转发] "
 	fi
 
+	# Service messages (no text/media detected)
+	if [ -z "$_label" ] && [ -z "$_cap" ]; then
+		_new="$(json_get "$_msg" new_chat_members 2>/dev/null)" || _new=""
+		[ -n "$_new" ] && [ "$_new" != "NOTFOUND" ] && _label="[新成员加入]"
+		_left="$(json_get "$_msg" left_chat_member 2>/dev/null)" || _left=""
+		[ -n "$_left" ] && [ "$_left" != "NOTFOUND" ] && _label="[成员离开]"
+		_pin="$(json_get "$_msg" pinned_message 2>/dev/null)" || _pin=""
+		[ -n "$_pin" ] && [ "$_pin" != "NOTFOUND" ] && _label="[置顶消息]"
+		_title="$(json_get "$_msg" new_chat_title 2>/dev/null)" || _title=""
+		if [ -n "$_title" ] && [ "$_title" != "NOTFOUND" ]; then
+			_label="[群名改为: $_title]"
+		fi
+		_tpc="$(json_get "$_msg" forum_topic_created 2>/dev/null)" || _tpc=""
+		[ -n "$_tpc" ] && [ "$_tpc" != "NOTFOUND" ] && _label="[新话题]"
+		if [ -n "$(json_get "$_msg" forum_topic_closed 2>/dev/null)" 2>/dev/null ]; then
+			_label="[话题关闭]"
+		fi
+		if [ -n "$(json_get "$_msg" forum_topic_reopened 2>/dev/null)" 2>/dev/null ]; then
+			_label="[话题重开]"
+		fi
+	fi
+
 	if [ -n "$_cap" ]; then
 		printf '%s%s %s' "$_prefix" "$_label" "$_cap"
 	else
