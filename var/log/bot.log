@@ -331,3 +331,8 @@
 [2026-05-03T03:02:58] WARN http_get retry 1/2: http://fail.example.com
 [2026-05-03T03:02:58] WARN http_get retry 2/2: http://fail.example.com
 [2026-05-03T03:02:58] WARN http_get retry 3/2: http://fail.example.com
+[2026-05-03T03:08:07] INFO dispatch: /ping → handler_ping (from qq/handler.sh)
+[2026-05-03T03:08:07] INFO handler_ping: from 111
+[2026-05-03T03:08:07] WARN http_get retry 1/2: http://fail.example.com
+[2026-05-03T03:08:07] WARN http_get retry 2/2: http://fail.example.com
+[2026-05-03T03:08:07] WARN http_get retry 3/2: http://fail.example.com
