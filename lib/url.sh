@@ -1,8 +1,9 @@
-# hush-url/lib/url.sh — pure shell URL encode/decode
+# hush-url/lib/url.sh — pure shell URL encode/decode + UTF-8 decode
 # Works in busybox:musl, no external dependencies
 #
 # url_encode <string>  → percent-encoded string
 # url_decode <string>  → decoded string
+# utf8_decode <string> → \uXXXX → UTF-8 bytes
 
 # Percent-encode non-unreserved ASCII characters (RFC 3986)
 # Unreserved: A-Z a-z 0-9 - _ . ~  (NOT encoded)
@@ -79,4 +80,39 @@ url_decode() {
 		s/%7D/}/g
 		s/%7E/~/g
 	'
+}
+
+# Convert \uXXXX JSON unicode escapes to UTF-8 bytes
+# U+0000..U+007F → 1 byte, U+0080..U+07FF → 2 bytes, U+0800..U+FFFF → 3 bytes
+utf8_decode() {
+	printf '%s' "$1" | awk 'BEGIN {
+		split("0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15", hv)
+		split("0123456789ABCDEF", hd, "")
+	}
+	{
+		s = $0
+		while (match(s, /\\u[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]/)) {
+			h = substr(s, RSTART+2, 4)
+			cp = 0
+			for (i = 1; i <= 4; i++) {
+				cc = substr(h, i, 1)
+				# toupper via case
+				if (cc == "a") cc = "A"; else if (cc == "b") cc = "B"
+				else if (cc == "c") cc = "C"; else if (cc == "d") cc = "D"
+				else if (cc == "e") cc = "E"; else if (cc == "f") cc = "F"
+				for (j = 1; j <= 16; j++) {
+					if (cc == hd[j]) { cp = cp * 16 + hv[j]; break }
+				}
+			}
+			if (cp < 0x80) {
+				u = sprintf("%c", cp)
+			} else if (cp < 0x800) {
+				u = sprintf("%c%c", 0xC0 + int(cp/64), 0x80 + cp%64)
+			} else {
+				u = sprintf("%c%c%c", 0xE0 + int(cp/4096), 0x80 + int((cp%4096)/64), 0x80 + cp%64)
+			}
+			s = substr(s, 1, RSTART-1) u substr(s, RSTART+6)
+		}
+		print s
+	}'
 }

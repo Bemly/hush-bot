@@ -89,6 +89,9 @@ sync_handler() {
 	# Skip already-synced messages (loop prevention)
 	case "$_txt" in "(sync)"*) return 0 ;; esac
 
+	# Decode \uXXXX to UTF-8 before processing
+	_txt="$(utf8_decode "$_txt")"
+
 	# Map non-message events to descriptive text
 	case "$_evt" in
 		group_nudge) _txt="[戳一戳]" ;;

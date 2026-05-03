@@ -42,8 +42,17 @@ test_url_decode_space
 test_url_decode_plus
 test_url_decode_percent
 test_url_decode_double
+test_utf8_decode_cjk()       { _r="$(utf8_decode '\u8349\u4E86')"; assert_eq "$_r" '草了' "utf8 CJK"; }
+test_utf8_decode_mixed()     { _r="$(utf8_decode 'hi \u4F60\u597D')"; assert_eq "$_r" 'hi 你好' "utf8 mixed"; }
+test_utf8_decode_plain()     { _r="$(utf8_decode 'hello world')"; assert_eq "$_r" 'hello world' "utf8 plain unchanged"; }
+test_utf8_decode_empty()     { _r="$(utf8_decode '')"; assert_eq "$_r" '' "utf8 empty"; }
+
 test_url_roundtrip_password
 test_url_roundtrip_query
 test_url_roundtrip_all
 test_url_encode_empty
 test_url_decode_empty
+test_utf8_decode_cjk
+test_utf8_decode_mixed
+test_utf8_decode_plain
+test_utf8_decode_empty

@@ -69,6 +69,39 @@ ssh fnOS 'docker exec Ayu sh -c "wget -q -O- https://tghook.bemly.moe/..."'
 ssh fnOS 'curl ...'  # GNU curl != busybox wget
 ```
 
+## Production Verification Checklist
+
+**After EVERY deployment to NAS, run ALL of these from inside the `Ayu` container:**
+
+```sh
+# 1. Auth: reject missing/wrong token (MUST return 403)
+docker exec Ayu wget -q -O- 'http://127.0.0.1:6160/cgi-bin/router.sh/qq' --post-data='{}'
+docker exec Ayu wget -q -O- 'http://127.0.0.1:6160/cgi-bin/router.sh/qq?token=bad' --post-data='{}'
+
+# 2. Auth: accept correct token
+docker exec Ayu wget -q -O- \
+  'http://127.0.0.1:6160/cgi-bin/router.sh/qq?token=REDACTED' \
+  --post-data='{"event_type":"message_receive","data":{"sender_id":1,"message_scene":"group","group_id":1,"segments":[{"type":"text","data":{"text":"test"}}]}}' \
+  --header='Content-Type: application/json'
+# Expected: {"status":"ok"}
+
+# 3. QQ API connectivity
+docker exec Ayu wget -q -O- -T 5 http://127.0.0.1:616/api/get_group_list \
+  --header='Authorization: Bearer REDACTED' \
+  --header='Content-Type: application/json' --post-data='{}'
+# Expected: {"status":"ok","retcode":0,...}
+
+# 4. TG API connectivity (via CF Worker)
+docker exec Ayu wget -q -O- -T 5 \
+  https://tghook.bemly.moe/botREDACTED/getMe
+# Expected: {"ok":true,"result":{...}}
+
+# 5. Sync config exists
+docker exec Ayu cat /test/etc/sync.conf
+```
+
+**All checks must pass before considering deployment complete.**
+
 **Why:** The NAS host has GNU wget and curl with different TLS/proxy/cert behavior than the busybox:musl container. Tests that pass on the host don't guarantee the container can do the same thing. This has caused multiple debugging dead ends. See memory: feedback_test_busybox.md
 
 ## Deploy workflow
