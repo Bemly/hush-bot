@@ -12,10 +12,10 @@ mkdir -p "$_LOG_DIR" 2>/dev/null
 
 # _log <level_int> <level_str> <msg>
 _log() {
-    _lv="$1" _tag="$2" _msg="$3"
+    _lv="$1" _tag="$2"
     if [ "$_lv" -ge "$_LOG_LEVEL" ]; then
         _ts="$(date +%Y-%m-%dT%H:%M:%S)"
-        printf '[%s] %s %s\n' "$_ts" "$_tag" "$_msg" >> "$_LOG_FILE"
+        printf '[%s] %s %s\n' "$_ts" "$_tag" "$3" >> "$_LOG_FILE"
     fi
 }
 

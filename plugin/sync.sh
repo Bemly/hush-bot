@@ -51,42 +51,43 @@ _sync_get_sender() {
 }
 
 # Extract source chat/channel/group ID as config lookup key
-# Returns format matching etc/sync.conf: group/<id>, private/<id>, or plain <id>
 _sync_source_id() {
 	_pf="$1" _raw="$2"
 	case "$_pf" in
 	qq)
-		# group_nudge / member_join: group_id only, no message_scene
-		_gid="$(json_get "$_raw" group_id)"
-		if [ -n "$_gid" ] && [ "$_gid" != "NOTFOUND" ]; then
-			printf 'group/%s' "$_gid"
-		else
-			_scene="$(json_get "$_raw" message_scene)"
-			if [ "$_scene" = "group" ]; then
-				_gid="$(json_get "$_raw" group_id)"
-				printf 'group/%s' "$_gid"
-			else
-				_pid="$(json_get "$_raw" peer_id)"
-				printf 'private/%s' "$_pid"
+		# message_receive: group_id is nested in group.group_id
+		_group="$(json_get "$_raw" group 2>/dev/null)" || _group=""
+		if [ -n "$_group" ] && [ "$_group" != "NOTFOUND" ]; then
+			_gid="$(json_get "$_group" group_id 2>/dev/null)" || _gid=""
+			if [ -n "$_gid" ] && [ "$_gid" != "NOTFOUND" ]; then
+				printf 'group/%s' "$_gid"; return
 			fi
 		fi
+		# non-message events: group_id at top level
+		_gid="$(json_get "$_raw" group_id 2>/dev/null)" || _gid=""
+		if [ -n "$_gid" ] && [ "$_gid" != "NOTFOUND" ]; then
+			printf 'group/%s' "$_gid"; return
+		fi
+		# private messages
+		_pid="$(json_get "$_raw" peer_id 2>/dev/null)" || _pid=""
+		[ -n "$_pid" ] && [ "$_pid" != "NOTFOUND" ] && printf 'private/%s' "$_pid"
 		;;
 	telegram)
-		_chat="$(json_get "$_raw" chat)"
+		_chat="$(json_get "$_raw" chat 2>/dev/null)" || _chat=""
 		if [ -n "$_chat" ] && [ "$_chat" != "NOTFOUND" ]; then
-			json_get "$_chat" id
+			_cid="$(json_get "$_chat" id 2>/dev/null)" || _cid=""
+			printf '%s' "$_cid"
 		fi
 		;;
 	esac
 }
 
 # Main sync handler — called by dispatch
-# Matches source platform+chat against etc/sync.conf, forwards to each target
 sync_handler() {
 	_pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
 
 	# Skip already-synced messages (loop prevention)
-	case "$_txt" in "[sync]"*) return 0 ;; esac
+	case "$_txt" in "(sync)"*) return 0 ;; esac
 
 	# Map non-message events to descriptive text
 	case "$_evt" in
@@ -99,17 +100,22 @@ sync_handler() {
 
 	_conf="${_SYNC_CONF:-$_HB/etc/sync.conf}"
 	if [ ! -f "$_conf" ]; then
-		log_debug "sync: no config at $_conf"
+		log_debug "sync: no conf at $_conf"
 		return 0
 	fi
 
 	# Build prefixed text with sender attribution
 	_sender="$(_sync_get_sender "$_pf" "$_raw")"
-	_text="[sync] [$_pf] $_sender: $_txt"
+	_text="(sync) [$_pf] $_sender: $_txt"
 
 	# Extract source ID for config lookup
 	_src_id="$(_sync_source_id "$_pf" "$_raw")"
-	[ -z "$_src_id" ] && return 0
+	if [ -z "$_src_id" ]; then
+		log_debug "sync: no src_id pf=$_pf"
+		return 0
+	fi
+
+	log_info "sync: $_pf $_src_id → $_txt"
 
 	# Pre-build platform-specific payloads
 	_segs="$(qq_text_segments "$_text")"
@@ -127,9 +133,10 @@ sync_handler() {
 		_tid="${_tgt#*/}"
 		_found=1
 
+		log_debug "sync: match $_src → $_tgt"
+
 		case "$_tpf" in
 		telegram)
-			# Support topic: telegram/<chat_id>/<thread_id>
 			_tcid="${_tid%%/*}"
 			_tthr="${_tid#*/}"
 			if [ "$_tthr" != "$_tcid" ] && [ -n "$_tthr" ]; then
@@ -137,27 +144,42 @@ sync_handler() {
 			else
 				_body="$(json_obj "chat_id" "$_tcid" "text" "$_text")"
 			fi
-			_tg_api "sendMessage" "$_body" "sync.tg" >/dev/null 
-				|| log_err "sync: $_pf→tg fail: $_ERROR"
-			;;		qq)
+			if _tg_api "sendMessage" "$_body" "sync.tg" >/dev/null; then
+				log_info "sync: $_pf→tg OK"
+			else
+				log_err "sync: $_pf→tg FAIL: $_ERROR"
+			fi
+			;;
+		qq)
 			case "$_tid" in
 			group/*)
-				qq_message_send_group "${_tid#group/}" "$_segs" >/dev/null \
-					|| log_err "sync: $_pf→qq group fail: $_ERROR"
+				_gid="${_tid#group/}"
+				if qq_message_send_group "$_gid" "$_segs" >/dev/null; then
+					log_info "sync: $_pf→qq group $_gid OK"
+				else
+					log_err "sync: $_pf→qq group $_gid FAIL: $_ERROR"
+				fi
 				;;
 			private/*)
-				qq_message_send_private "${_tid#private/}" "$_segs" >/dev/null \
-					|| log_err "sync: $_pf→qq private fail: $_ERROR"
+				_pid="${_tid#private/}"
+				if qq_message_send_private "$_pid" "$_segs" >/dev/null; then
+					log_info "sync: $_pf→qq private $_pid OK"
+				else
+					log_err "sync: $_pf→qq private $_pid FAIL: $_ERROR"
+				fi
 				;;
 			esac
 			;;
 		discord)
-			dc_message_create "$_tid" "$_dc_body" >/dev/null \
-				|| log_err "sync: $_pf→dc fail: $_ERROR"
+			if dc_message_create "$_tid" "$_dc_body" >/dev/null; then
+				log_info "sync: $_pf→dc OK"
+			else
+				log_err "sync: $_pf→dc FAIL: $_ERROR"
+			fi
 			;;
 		esac
 	done < "$_conf"
 
-	[ $_found -eq 0 ] && log_debug "sync: no targets for $_pf $_src_id"
+	[ $_found -eq 0 ] && log_debug "sync: no match for $_pf $_src_id"
 	return 0
 }

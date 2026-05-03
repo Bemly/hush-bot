@@ -177,7 +177,6 @@ _tg_dispatch_msg() {
 	_cid="$(json_get "$_chat" id 2>/dev/null)" || _cid=""
 	[ "$_cid" = "NOTFOUND" ] && _cid=""
 	log_info "tg_webhook: $_evt chat=$_cid text=$_txt"
-	[ -z "$_txt" ] && log_info "tg_webhook: no text, keys=$(printf '%s' "$_msg" | sed -n 's/.*"\([a-z_]*\)":.*/\1/p' | tr '\n' ' ')"
 	dispatch "telegram" "message" "$_cid" "$_txt" "$_msg"
 }
 

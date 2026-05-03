@@ -4,37 +4,37 @@
 # Pattern matching: glob/case on message text
 
 dispatch() {
-    _pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
-    _rules="${_RULES:-$_HB/etc/rules}"
+	_pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
+	_rules="${_RULES:-$_HB/etc/rules}"
 
-    if [ ! -f "$_rules" ]; then
-        log_warn "dispatch: no rules file at $_rules"
-        return 0
-    fi
+	if [ ! -f "$_rules" ]; then
+		log_warn "dispatch: no rules file at $_rules"
+		return 0
+	fi
 
-    while IFS='|' read -r _pat _script _func; do
-        [ -z "$_pat" ] && continue
-        case "$_pat" in \#*) continue ;; esac  # skip comments
+	while IFS='|' read -r _pat _script _func; do
+		[ -z "$_pat" ] && continue
+		case "$_pat" in \#*) continue ;; esac
 
-        # glob match
-        case "$_txt" in
-            $_pat)
-                log_info "dispatch: $_txt → $_func (from $_script)"
-                            _script="$_HB/adapter/$_script"
-                if [ -f "$_script" ]; then
-                    . "$_script"
-                    "$_func" "$_pf" "$_evt" "$_uid" "$_txt" "$_raw" || {
-                        log_err "dispatch: $_func failed: $_ERROR"
-                        return 1
-                    }
-                else
-                    log_err "dispatch: handler not found: $_script"
-                fi
-                return 0
-                ;;
-        esac
-    done < "$_rules"
+		# glob match
+		case "$_txt" in
+			$_pat)
+				log_info "dispatch: $_txt → $_func len=${#_raw}"
+				_script="$_HB/adapter/$_script"
+				if [ -f "$_script" ]; then
+					. "$_script"
+					"$_func" "$_pf" "$_evt" "$_uid" "$_txt" "$_raw" || {
+						log_err "dispatch: $_func failed: $_ERROR"
+						return 1
+					}
+				else
+					log_err "dispatch: handler not found: $_script"
+				fi
+				return 0
+				;;
+		esac
+	done < "$_rules"
 
-    log_debug "dispatch: no match for $_txt"
-    return 0
+	log_debug "dispatch: no match for $_txt"
+	return 0
 }

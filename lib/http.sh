@@ -5,7 +5,7 @@ _HTTP_STATUS=""
 _HTTP_RETRY="${_HTTP_RETRY:-2}"       # retry count
 _HTTP_TIMEOUT="${_HTTP_TIMEOUT:-10}"  # seconds
 # Proxy: if http_proxy env is set, enable wget proxy (-Y on)
-_Y="$_Y"
+_Y="-Y off"
 [ -n "${http_proxy:-}${https_proxy:-}" ] && _Y="-Y on"
 
 # http_get <url> [header...]

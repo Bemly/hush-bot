@@ -57,6 +57,38 @@ See memory: busybox-httpd-cgi.md
 - Use 1-3 char variable names
 - See memory: busybox-awk-limits.md
 
+## NAS Production Testing
+
+**All network and connectivity tests on the NAS MUST run inside the `Ayu` Docker container, NEVER on the NAS host.**
+
+```sh
+# RIGHT: inside the container
+ssh fnOS 'docker exec Ayu sh -c "wget -q -O- https://tghook.bemly.moe/..."'
+
+# WRONG: on the NAS host directly
+ssh fnOS 'curl ...'  # GNU curl != busybox wget
+```
+
+**Why:** The NAS host has GNU wget and curl with different TLS/proxy/cert behavior than the busybox:musl container. Tests that pass on the host don't guarantee the container can do the same thing. This has caused multiple debugging dead ends. See memory: feedback_test_busybox.md
+
+## Deploy workflow
+
+**Modify locally → test in local Docker → then deploy to NAS. Never edit directly on NAS.**
+
+```sh
+# 1. Edit files locally
+# 2. Test in local Docker
+docker run --rm -v $(pwd):/test busybox:musl hush /test/test/run.sh
+# 3. Only after 0 failures, deploy to NAS
+sshpass -p '...' scp file.sh fnOS:/vol1/1000/Ayu/path/file.sh
+# 4. Restart httpd on NAS
+docker exec Ayu sh -c 'killall httpd; cd /test && hush cgi-bin/start.sh'
+```
+
+**Exception:** `etc/config.sh` and `etc/sync.conf` NAS values (tokens, hostnames) differ from local defaults. These can be edited on NAS directly or via env vars.
+
+**Why:** Editing on NAS risks syntax errors in production. Local Docker catches them first.
+
 ## Coding patterns
 
 - **Refactor repeated patterns into helpers**: when the same `_qq_call + json_get + error wrap` pattern appears across 20+ functions, extract ONE `_qq_api()` helper. Don't edit each copy individually.
