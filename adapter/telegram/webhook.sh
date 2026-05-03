@@ -124,11 +124,26 @@ tg_extract_text() {
 		[ -n "$_gm" ] && [ "$_gm" != "NOTFOUND" ] && _label="[游戏]"
 	fi
 
-	# Build output: [label] + caption text
+	# Build output: [prefix] [label] + caption text
+	_prefix=""
+
+	# reply
+	_reply="$(json_get "$_msg" reply_to_message 2>/dev/null)" || _reply=""
+	if [ -n "$_reply" ] && [ "$_reply" != "NOTFOUND" ]; then
+		_rt="$(tg_extract_text "$_reply")"
+		[ -n "$_rt" ] && _prefix="$_prefix[回复: $_rt] "
+	fi
+
+	# forward
+	_fwd="$(json_get "$_msg" forward_origin 2>/dev/null)" || _fwd=""
+	if [ -n "$_fwd" ] && [ "$_fwd" != "NOTFOUND" ]; then
+		_prefix="$_prefix[转发] "
+	fi
+
 	if [ -n "$_cap" ]; then
-		printf '%s %s' "$_label" "$_cap"
+		printf '%s%s %s' "$_prefix" "$_label" "$_cap"
 	else
-		printf '%s' "$_label"
+		printf '%s%s' "$_prefix" "$_label"
 	fi
 }
 
@@ -136,8 +151,12 @@ tg_extract_text() {
 _tg_dispatch_msg() {
 	_msg="$1" _evt="$2"
 	_txt="$(tg_extract_text "$_msg")"
-	log_info "tg_webhook: $_evt text=$_txt"
-	dispatch "telegram" "message" "" "$_txt" "$_msg"
+	_chat="$(json_get "$_msg" chat 2>/dev/null)" || _chat=""
+	_cid="$(json_get "$_chat" id 2>/dev/null)" || _cid=""
+	[ "$_cid" = "NOTFOUND" ] && _cid=""
+	log_info "tg_webhook: $_evt chat=$_cid text=$_txt"
+	[ -z "$_txt" ] && log_info "tg_webhook: no text, keys=$(printf '%s' "$_msg" | sed -n 's/.*"\([a-z_]*\)":.*/\1/p' | tr '\n' ' ')"
+	dispatch "telegram" "message" "$_cid" "$_txt" "$_msg"
 }
 
 tg_webhook() {
