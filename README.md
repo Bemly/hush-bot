@@ -70,16 +70,22 @@ dc_webhook_execute "<id>" "<token>" "hello from Ayu.Core"
 
 ```sh
 # etc/config.sh
-QQ_HOST="localhost"          # Lagrange.Milky address
-QQ_PORT="8080"
+# QQ (Lagrange.Milky) — use host.docker.internal for bridge, 127.0.0.1 for host
+QQ_HOST="host.docker.internal"
+QQ_PORT="616"
 QQ_TOKEN="your-qq-token"
 
-TG_TOKEN="123:abc"          # Telegram Bot token
+# Telegram
+TG_TOKEN="123:abc"
 
-DC_TOKEN="your-bot-token"   # Discord Bot token
+# Discord
+DC_TOKEN="your-bot-token"
 
-BOT_PORT="8080"             # httpd listen port
-_LOG_LEVEL="1"              # 0=trace, 1=info, 2=warn, 3=err
+# Bot server
+BOT_PORT="6160"
+WEBHOOK_SECRET=""            # set to require ?token=xxx in webhook URL
+
+_LOG_LEVEL="1"               # 0=trace, 1=info, 2=warn, 3=err
 ```
 
 ## Platform APIs
@@ -174,7 +180,7 @@ docker run --rm -v $(pwd):/test busybox:musl hush -c "
 "
 ```
 
-**68 tests, 0 failures** — QQ(14) + Telegram(6) + Discord(26) + HTTP(4) + Dispatch(2) + Sync(10)
+**79 tests, 0 failures** — QQ(14) + Telegram(6) + Discord(26) + HTTP(4) + Dispatch(2) + Sync(10) + Log(4) + Auth(5)
 
 ## Performance
 
