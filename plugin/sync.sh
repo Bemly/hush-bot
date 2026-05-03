@@ -86,8 +86,19 @@ _sync_source_id() {
 sync_handler() {
 	_pf="$1" _evt="$2" _uid="$3" _txt="$4" _raw="$5"
 
-	# Skip already-synced messages (loop prevention)
+	# Loop prevention 1: emoji prefix = already forwarded
 	case "$_txt" in "🐧"*|"✈️"*|"👾"*) return 0 ;; esac
+	# Loop prevention 2: sender is the bot itself
+	case "$_pf" in
+		qq) [ "$_uid" = "3156037162" ] && return 0 ;;
+		telegram)
+			_fid="$(json_get "$_raw" from 2>/dev/null)" || _fid=""
+			if [ -n "$_fid" ] && [ "$_fid" != "NOTFOUND" ]; then
+				_fid_id="$(json_get "$_fid" id 2>/dev/null)" || _fid_id=""
+				[ "$_fid_id" = "8723729335" ] && return 0
+			fi
+			;;
+	esac
 
 	# Decode \uXXXX to UTF-8 before processing
 	_txt="$(utf8_decode "$_txt")"
@@ -109,6 +120,7 @@ sync_handler() {
 
 	# Build prefixed text with sender attribution
 	_sender="$(_sync_get_sender "$_pf" "$_raw")"
+		_sender="$(utf8_decode "$_sender")"
 	case "$_pf" in qq) _icon="🐧" ;; telegram) _icon="✈️" ;; discord) _icon="👾" ;; *) _icon="[$_pf]" ;; esac
 	_text="$_icon $_sender: $_txt"
 
