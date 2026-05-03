@@ -87,10 +87,15 @@ _sync_source_id() {
 # Forward QQ images to TG as text links (temp_url is internal, TG can't access)
 _sync_qq_images_to_tg() {
 	_raw="$1" _tcid="$2" _tthr="$3" _sender="$4"
-	_segs="$(json_get "$_raw" segments 2>/dev/null)" || return 1
+	_segs="$(json_get "$_raw" segments 2>/dev/null)" || _segs=""
+	if [ -z "$_segs" ] || [ "$_segs" = "NOTFOUND" ]; then
+		log_info "sync: img no segments"; return 1
+	fi
 	_urls="$(printf '%s' "$_segs" | sed 's/},{"type"/\
 {"type"/g' | sed -n 's/.*"temp_url":"\([^"]*\)".*/\1/p')"
-	[ -z "$_urls" ] && return 1
+if [ -z "$_urls" ]; then
+		log_info "sync: img no urls"; return 1
+	fi
 	_sent=0
 	IFS='
 '
@@ -108,6 +113,7 @@ _sync_qq_images_to_tg() {
 			log_err "sync: qq→tg img url FAIL: $_ERROR"
 		fi
 	done
+	log_info "sync: qq→tg images sent=$_sent"
 	[ $_sent -gt 0 ] && return 0 || return 1
 }
 
@@ -115,15 +121,17 @@ _sync_qq_images_to_tg() {
 _sync_tg_photo_to_qq() {
 	_raw="$1" _gid="$2"
 	_photos="$(json_get "$_raw" photo 2>/dev/null)" || return 1
-	[ -z "$_photos" ] || [ "$_photos" = "NOTFOUND" ] && return 1
+	if [ -z "$_photos" ] || [ "$_photos" = "NOTFOUND" ]; then return 1; fi
 	_fid="$(printf '%s' "$_photos" | sed -n 's/.*"file_id":"\([^"]*\)".*/\1/p' | tail -1)"
-	[ -z "$_fid" ] && return 1
+	if [ -z "$_fid" ]; then return 1; fi
 	_fp="$(tg_getFile "$_fid" 2>/dev/null)" || _fp=""
 	if [ -z "$_fp" ] || [ "$_fp" = "NOTFOUND" ]; then
 		log_err "sync: tg→qq getFile FAIL"; return 1
 	fi
 	_path="$(json_get "$_fp" file_path 2>/dev/null)" || _path=""
-	[ -z "$_path" ] || [ "$_path" = "NOTFOUND" ] && { log_err "sync: tg→qq no file_path"; return 1; }
+	if [ -z "$_path" ] || [ "$_path" = "NOTFOUND" ]; then
+		log_err "sync: tg→qq no file_path"; return 1
+	fi
 	_tmp="/tmp/sync-img-$$-$(date +%s)"
 	_url="https://${TG_API_HOST}/file/bot${TG_TOKEN}/${_path}"
 	_fname="${_path##*/}"
@@ -222,7 +230,9 @@ sync_handler() {
 				log_err "sync: $_pf→tg FAIL: $_ERROR"
 			fi
 			# Forward images (QQ→TG)
-			[ "$_pf" = "qq" ] && _sync_qq_images_to_tg "$_raw" "$_tcid" "$_tthr" "$_sender"
+			if [ "$_pf" = "qq" ]; then
+				_sync_qq_images_to_tg "$_raw" "$_tcid" "$_tthr" "$_sender"
+			fi
 			;;
 		qq)
 			case "$_tid" in
@@ -234,7 +244,9 @@ sync_handler() {
 					log_err "sync: $_pf→qq group $_gid FAIL: $_ERROR"
 				fi
 				# Forward photo (TG→QQ)
-				[ "$_pf" = "telegram" ] && _sync_tg_photo_to_qq "$_raw" "$_gid"
+				if [ "$_pf" = "telegram" ]; then
+					_sync_tg_photo_to_qq "$_raw" "$_gid"
+				fi
 				;;
 			private/*)
 				_pid="${_tid#private/}"
