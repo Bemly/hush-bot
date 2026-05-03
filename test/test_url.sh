@@ -8,7 +8,7 @@ test_url_encode_ampersand()  { _r="$(url_encode '&')"; assert_eq "$_r" "%26" "en
 test_url_encode_space()      { _r="$(url_encode ' ')" ; assert_eq "$_r" "%20" "encode space"; }
 test_url_encode_percent()    { _r="$(url_encode '%')"; assert_eq "$_r" "%25" "encode %"; }
 test_url_encode_unreserved() { _r="$(url_encode 'abc-ABC_123.~')"; assert_eq "$_r" "abc-ABC_123.~" "encode unreserved unchanged"; }
-test_url_encode_password()   { _r="$(url_encode 'REDACTED')"; assert_eq "$_r" "REDACTED" "encode password"; }
+test_url_encode_password()   { _r="$(url_encode 'test;pw<H#abc')"; assert_eq "$_r" "test%3Bpw%3CH%23abc" "encode password"; }
 
 test_url_decode_hash()       { _r="$(url_decode '%23')"; assert_eq "$_r" "#" "decode %23"; }
 test_url_decode_lt()         { _r="$(url_decode '%3C')"; assert_eq "$_r" "<" "decode %3C"; }
@@ -19,7 +19,7 @@ test_url_decode_plus()       { _r="$(url_decode 'a+b')"; assert_eq "$_r" "a b" "
 test_url_decode_percent()    { _r="$(url_decode '%25')"; assert_eq "$_r" "%" "decode %25"; }
 test_url_decode_double()     { _r="$(url_decode '%2520')"; assert_eq "$_r" " " "decode %2520 → space"; }
 
-test_url_roundtrip_password() { _e="$(url_encode 'REDACTED')"; _d="$(url_decode "$_e")"; assert_eq "$_d" "REDACTED" "round-trip password"; }
+test_url_roundtrip_password() { _e="$(url_encode 'test;pw<H#abc')"; _d="$(url_decode "$_e")"; assert_eq "$_d" "test;pw<H#abc" "round-trip password"; }
 test_url_roundtrip_query()    { _e="$(url_encode 'key=value&x=1')"; _d="$(url_decode "$_e")"; assert_eq "$_d" "key=value&x=1" "round-trip query"; }
 test_url_roundtrip_all()      { _a='!"#$%&'"'"'()*+,-./:;<=>?@[\]^_`{|}~'; _e="$(url_encode "$_a")"; _d="$(url_decode "$_e")"; assert_eq "$_d" "$_a" "round-trip all special"; }
 test_url_encode_empty()       { _r="$(url_encode '')"; assert_eq "$_r" "" "encode empty"; }
