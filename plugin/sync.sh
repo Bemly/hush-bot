@@ -8,6 +8,72 @@
 [ -f "$_HB/adapter/qq/message.sh" ] && . "$_HB/adapter/qq/message.sh"
 [ -f "$_HB/adapter/telegram/message.sh" ] && . "$_HB/adapter/telegram/message.sh"
 [ -f "$_HB/adapter/discord/message.sh" ] && . "$_HB/adapter/discord/message.sh"
+[ -f "$_HB/adapter/qq/file.sh" ] && . "$_HB/adapter/qq/file.sh"
+[ -f "$_HB/adapter/telegram/file.sh" ] && . "$_HB/adapter/telegram/file.sh"
+
+# Forward QQ images to Telegram as text links
+# QQ temp_url is internal only, TG can't access; send as text link instead
+_sync_qq_images_to_tg() {
+	_raw="$1" _tcid="$2" _tthr="$3" _sender="$4"
+	_segs="$(json_get "$_raw" segments 2>/dev/null)" || return 1
+	_urls="$(printf '%s' "$_segs" | sed 's/},{"type"/\
+{"type"/g' | sed -n 's/.*"temp_url":"\([^"]*\)".*/\1/p')"
+	[ -z "$_urls" ] && return 1
+
+	_sent=0
+	IFS='
+'
+	for _url in $_urls; do
+		[ -z "$_url" ] && continue
+		_text="🐧 $_sender: [图片] $_url"
+		if [ -n "$_tthr" ]; then
+			_body="$(json_obj "chat_id" "$_tcid" "text" "$_text" "message_thread_id" "$_tthr")"
+		else
+			_body="$(json_obj "chat_id" "$_tcid" "text" "$_text")"
+		fi
+		if _tg_api "sendMessage" "$_body" "sync.img.url" >/dev/null; then
+			_sent=$((_sent + 1))
+		else
+			log_err "sync: qq→tg img url FAIL: $_ERROR"
+		fi
+	done
+	[ $_sent -gt 0 ] && return 0 || return 1
+}
+
+# Forward TG photo to QQ (download + upload)
+_sync_tg_photo_to_qq() {
+	_raw="$1" _gid="$2"
+	_photos="$(json_get "$_raw" photo 2>/dev/null)" || return 1
+	[ -z "$_photos" ] || [ "$_photos" = "NOTFOUND" ] && return 1
+	_fid="$(printf '%s' "$_photos" | sed -n 's/.*"file_id":"\([^"]*\)".*/\1/p' | tail -1)"
+	[ -z "$_fid" ] && return 1
+
+	_fp="$(tg_getFile "$_fid" 2>/dev/null)" || _fp=""
+	if [ -z "$_fp" ] || [ "$_fp" = "NOTFOUND" ]; then
+		log_err "sync: tg→qq getFile FAIL"
+		return 1
+	fi
+	_path="$(json_get "$_fp" file_path 2>/dev/null)" || _path=""
+	[ -z "$_path" ] || [ "$_path" = "NOTFOUND" ] && return 1
+
+	_tmp="/tmp/sync-img-$$-$(date +%s)"
+	_url="https://${TG_API_HOST}/file/bot${TG_TOKEN}/${_path}"
+	_fname="${_path##*/}"
+	wget -q -O "$_tmp" -T 15 "$_url" 2>/dev/null || {
+		log_err "sync: tg→qq download FAIL"
+		rm -f "$_tmp"; return 1
+	}
+
+	_qq_up="$(qq_file_upload_group "$_gid" "$_tmp" "$_fname" 2>/dev/null)" || _qq_up=""
+	rm -f "$_tmp"
+	if [ -n "$_qq_up" ] && [ "$_qq_up" != "NOTFOUND" ]; then
+		log_info "sync: tg→qq image OK"
+		return 0
+	else
+		log_err "sync: tg→qq upload FAIL"
+		return 1
+	fi
+}
 
 # Extract sender display name from platform-specific raw JSON
 _sync_get_sender() {
@@ -164,6 +230,8 @@ sync_handler() {
 				log_info "sync: $_pf→tg OK"
 			else
 				log_err "sync: $_pf→tg FAIL: $_ERROR"
+				# Forward images (QQ → TG)
+				[ "$_pf" = "qq" ] && _sync_qq_images_to_tg "$_raw" "$_tcid" "$_tthr" "$_sender"
 			fi
 			;;
 		qq)
@@ -174,6 +242,8 @@ sync_handler() {
 					log_info "sync: $_pf→qq group $_gid OK"
 				else
 					log_err "sync: $_pf→qq group $_gid FAIL: $_ERROR"
+				# Forward photo (TG → QQ)
+				[ "$_pf" = "telegram" ] && _sync_tg_photo_to_qq "$_raw" "$_gid"
 				fi
 				;;
 			private/*)
