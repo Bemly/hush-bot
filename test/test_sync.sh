@@ -1,5 +1,5 @@
 # test/test_sync.sh — cross-platform sync tests (no accounts needed)
-# Uses mock_wget to simulate API responses
+# Uses mock_http to simulate API responses
 
 . ./plugin/sync.sh
 

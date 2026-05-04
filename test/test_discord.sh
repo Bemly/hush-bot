@@ -1,4 +1,4 @@
-# Discord adapter tests (mock_wget, no real API keys)
+# Discord adapter tests (mock_http, no real API keys)
 
 # --- Message ---
 test_dc_message_create() {

@@ -75,29 +75,30 @@ ssh fnOS 'curl ...'  # GNU curl != busybox wget
 
 ```sh
 # 1. Auth: reject missing/wrong token (MUST return 403)
-docker exec Ayu wget -q -O- 'http://127.0.0.1:6160/cgi-bin/router.sh/qq' --post-data='{}'
-docker exec Ayu wget -q -O- 'http://127.0.0.1:6160/cgi-bin/router.sh/qq?token=bad' --post-data='{}'
+sudo docker exec Ayu wget -q -O- 'http://127.0.0.1:6160/cgi-bin/router.sh/qq' --post-data='{}'
+sudo docker exec Ayu wget -q -O- 'http://127.0.0.1:6160/cgi-bin/router.sh/qq?token=bad' --post-data='{}'
 
 # 2. Auth: accept correct token
-docker exec Ayu wget -q -O- \
+sudo docker exec Ayu wget -q -O- \
   'http://127.0.0.1:6160/cgi-bin/router.sh/qq?token=REDACTED' \
   --post-data='{"event_type":"message_receive","data":{"sender_id":1,"message_scene":"group","group_id":1,"segments":[{"type":"text","data":{"text":"test"}}]}}' \
   --header='Content-Type: application/json'
 # Expected: {"status":"ok"}
 
 # 3. QQ API connectivity
-docker exec Ayu wget -q -O- -T 5 http://127.0.0.1:616/api/get_group_list \
+sudo docker exec Ayu wget -q -O- -T 5 http://host.docker.internal:616/api/get_group_list \
   --header='Authorization: Bearer REDACTED' \
   --header='Content-Type: application/json' --post-data='{}'
 # Expected: {"status":"ok","retcode":0,...}
 
-# 4. TG API connectivity (via CF Worker)
-docker exec Ayu wget -q -O- -T 5 \
+# 4. TG API connectivity (via CF Worker, requires X-Ayu-Token)
+sudo docker exec Ayu wget -q -O- -T 5 \
+  --header='X-Ayu-Token: REDACTED' \
   https://tghook.bemly.moe/botREDACTED/getMe
 # Expected: {"ok":true,"result":{...}}
 
 # 5. Sync config exists
-docker exec Ayu cat /test/etc/sync.conf
+sudo docker exec Ayu cat /test/etc/sync.conf
 ```
 
 **All checks must pass before considering deployment complete.**
@@ -113,9 +114,10 @@ docker exec Ayu cat /test/etc/sync.conf
 # 2. Test in local Docker
 docker run --rm -v $(pwd):/test busybox:musl hush /test/test/run.sh
 # 3. Only after 0 failures, deploy to NAS
-sshpass -p '...' scp file.sh fnOS:/vol1/1000/Ayu/path/file.sh
+sshpass -p '...' scp file.sh fnOS:/tmp/ && \
+  ssh fnOS 'sudo cp /tmp/file.sh /vol1/1000/Ayu/path/file.sh && sudo chmod +x /vol1/1000/Ayu/path/file.sh'
 # 4. Restart httpd on NAS
-docker exec Ayu sh -c 'killall httpd; cd /test && hush cgi-bin/start.sh'
+sudo docker exec Ayu sh -c 'killall httpd; cd /test && hush cgi-bin/start.sh'
 ```
 
 **Exception:** `etc/config.sh` and `etc/sync.conf` NAS values (tokens, hostnames) differ from local defaults. These can be edited on NAS directly or via env vars.

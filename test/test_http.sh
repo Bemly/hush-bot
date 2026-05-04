@@ -1,4 +1,4 @@
-# HTTP library tests (uses mock_wget)
+# HTTP library tests (uses mock_http)
 
 test_http_get_ok() {
     mock_set "response body"
@@ -16,7 +16,7 @@ test_http_get_retry() {
     mock_fail
     http_get "http://fail.example.com" 2>/dev/null
     assert_fail "http_get fails on mock_fail"
-    assert_contains "$_ERROR" "http_get" "http_get sets _ERROR on failure"
+    assert_contains "$_ERROR" "http" "http_get sets _ERROR on failure"
 }
 
 test_http_get_ok

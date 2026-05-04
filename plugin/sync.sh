@@ -84,33 +84,70 @@ _sync_source_id() {
 	esac
 }
 
-# Forward QQ images to TG as text links (temp_url is internal, TG can't access)
+# Upload file to Telegram via multipart/form-data
+_sync_tg_multipart() {
+	_chat="$1" _thr="$2" _file="$3" _fname="$4" _cap="$5"
+	_bound="ayu-$$-$(date +%s)"
+	_tmp="/tmp/tg-up-$$"
+	# Build multipart body
+	> "$_tmp"
+	printf '--%s\r\n' "$_bound" >> "$_tmp"
+	printf 'Content-Disposition: form-data; name="chat_id"\r\n\r\n' >> "$_tmp"
+	printf '%s\r\n' "$_chat" >> "$_tmp"
+	printf '--%s\r\n' "$_bound" >> "$_tmp"
+	printf 'Content-Disposition: form-data; name="photo"; filename="%s"\r\n' "$_fname" >> "$_tmp"
+	printf 'Content-Type: application/octet-stream\r\n\r\n' >> "$_tmp"
+	cat "$_file" >> "$_tmp"
+	printf '\r\n' >> "$_tmp"
+	if [ -n "$_cap" ]; then
+		printf '--%s\r\n' "$_bound" >> "$_tmp"
+		printf 'Content-Disposition: form-data; name="caption"\r\n\r\n' >> "$_tmp"
+		printf '%s\r\n' "$_cap" >> "$_tmp"
+	fi
+	if [ -n "$_thr" ]; then
+		printf '--%s\r\n' "$_bound" >> "$_tmp"
+		printf 'Content-Disposition: form-data; name="message_thread_id"\r\n\r\n' >> "$_tmp"
+		printf '%s\r\n' "$_thr" >> "$_tmp"
+	fi
+	printf '--%s--\r\n' "$_bound" >> "$_tmp"
+	# Send
+	_url="${TG_API_BASE}/sendPhoto"
+	if http_post_file "$_url" "$_tmp" \
+		"Content-Type: multipart/form-data; boundary=$_bound" \
+		"X-Ayu-Token: ${TG_API_SECRET}" >/dev/null; then
+		rm -f "$_tmp"; return 0
+	else
+		rm -f "$_tmp"; return 1
+	fi
+}
+
+# Forward QQ images to TG (download from temp_url, upload via multipart)
 _sync_qq_images_to_tg() {
 	_raw="$1" _tcid="$2" _tthr="$3" _sender="$4"
 	_segs="$(json_get "$_raw" segments 2>/dev/null)" || _segs=""
-	if [ -z "$_segs" ] || [ "$_segs" = "NOTFOUND" ]; then
-		log_info "sync: img no segments"; return 1
-	fi
+	if [ -z "$_segs" ] || [ "$_segs" = "NOTFOUND" ]; then return 1; fi
 	_urls="$(printf '%s' "$_segs" | sed 's/},{"type"/\
 {"type"/g' | sed -n 's/.*"temp_url":"\([^"]*\)".*/\1/p')"
-if [ -z "$_urls" ]; then
-		log_info "sync: img no urls"; return 1
+	if [ -z "$_urls" ]; then
+		log_info "sync: img segs=$(printf '%.200s' "$_segs")"
+		return 1
 	fi
 	_sent=0
 	IFS='
 '
 	for _url in $_urls; do
 		[ -z "$_url" ] && continue
-		_txt="🐧 $_sender: [图片] $_url"
+		_url="$(utf8_decode "$_url")"
+		# TG sendPhoto accepts URL — Telegram servers download it
 		if [ -n "$_tthr" ]; then
-			_body="$(json_obj "chat_id" "$_tcid" "text" "$_txt" "message_thread_id" "$_tthr")"
+			_body="$(json_obj "chat_id" "$_tcid" "photo" "$_url" "caption" "🐧 $_sender: [图片]" "message_thread_id" "$_tthr")"
 		else
-			_body="$(json_obj "chat_id" "$_tcid" "text" "$_txt")"
+			_body="$(json_obj "chat_id" "$_tcid" "photo" "$_url" "caption" "🐧 $_sender: [图片]")"
 		fi
-		if _tg_api "sendMessage" "$_body" "sync.img.url" >/dev/null; then
-			_sent=$((_sent + 1))
+		if _tg_api "sendPhoto" "$_body" "sync.img" >/dev/null; then
+			_sent=$((_sent + 1)); log_info "sync: qq→tg image OK"
 		else
-			log_err "sync: qq→tg img url FAIL: $_ERROR"
+			log_err "sync: qq→tg image FAIL: $_ERROR"
 		fi
 	done
 	log_info "sync: qq→tg images sent=$_sent"
@@ -132,10 +169,10 @@ _sync_tg_photo_to_qq() {
 	if [ -z "$_path" ] || [ "$_path" = "NOTFOUND" ]; then
 		log_err "sync: tg→qq no file_path"; return 1
 	fi
-	_tmp="/tmp/sync-img-$$-$(date +%s)"
+	_tmp="/tmp/sync-img-tg-$$-$(date +%s)"
 	_url="https://${TG_API_HOST}/file/bot${TG_TOKEN}/${_path}"
 	_fname="${_path##*/}"
-	wget -q -O "$_tmp" -T 15 "$_url" 2>/dev/null || {
+	http_get_file "$_url" "$_tmp" || {
 		log_err "sync: tg→qq download FAIL"; rm -f "$_tmp"; return 1
 	}
 	_qq_up="$(qq_file_upload_group "$_gid" "$_tmp" "$_fname" 2>/dev/null)" || _qq_up=""

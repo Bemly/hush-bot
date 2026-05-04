@@ -48,7 +48,7 @@ cd "$(dirname "$0")/.." || exit 1
 . ./adapter/discord/soundboard.sh
 . ./adapter/discord/monetize.sh
 . ./test/helper.sh
-. ./test/mock/mock_wget.sh
+. ./test/mock/mock_http.sh
 
 # run all test files
 for _f in test/test_*.sh; do
