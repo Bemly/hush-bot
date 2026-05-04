@@ -174,7 +174,7 @@ _sync_tg_photo_to_qq() {
 	_tmp="/tmp/img/sync-img-tg-$$-$_ts.${_fname##*.}"
 	_furi="file:///root/img/sync-img-tg-$$-$_ts.${_fname##*.}"
 	_url="https://${TG_API_HOST}/file/bot${TG_TOKEN}/${_path}"
-	http_get_file "$_url" "$_tmp" || {
+	http_get_file "$_url" "$_tmp" "X-Ayu-Token: ${TG_API_SECRET}" || {
 		log_err "sync: tg→qq download FAIL"; rm -f "$_tmp"; return 1
 	}
 	# Build image segment array → send via send_group_message
