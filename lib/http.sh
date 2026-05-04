@@ -91,7 +91,7 @@ _http_raw() {
 	# Mock short-circuit
 	if [ "${MOCK_HTTP:-0}" = "1" ]; then
 		if [ "${MOCK_FAIL:-0}" = "1" ]; then
-			_ERROR="http mock failure"
+			_ERROR="http_get: mock failure"
 			return "${MOCK_STATUS:-1}"
 		fi
 		_HTTP_STATUS="${MOCK_HTTP_STATUS:-200}"

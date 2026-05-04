@@ -169,18 +169,20 @@ _sync_tg_photo_to_qq() {
 	if [ -z "$_path" ] || [ "$_path" = "NOTFOUND" ]; then
 		log_err "sync: tg→qq no file_path"; return 1
 	fi
-	_tmp="/tmp/sync-img-tg-$$-$(date +%s)"
-	_url="https://${TG_API_HOST}/file/bot${TG_TOKEN}/${_path}"
 	_fname="${_path##*/}"
+	_ts=$(date +%s)
+	_tmp="/tmp/img/sync-img-tg-$$-$_ts.${_fname##*.}"
+	_furi="file:///root/img/sync-img-tg-$$-$_ts.${_fname##*.}"
+	_url="https://${TG_API_HOST}/file/bot${TG_TOKEN}/${_path}"
 	http_get_file "$_url" "$_tmp" || {
 		log_err "sync: tg→qq download FAIL"; rm -f "$_tmp"; return 1
 	}
-	_qq_up="$(qq_file_upload_group "$_gid" "$_tmp" "$_fname" 2>/dev/null)" || _qq_up=""
-	rm -f "$_tmp"
-	if [ -n "$_qq_up" ] && [ "$_qq_up" != "NOTFOUND" ]; then
-		log_info "sync: tg→qq image OK"; return 0
+	# Build image segment array → send via send_group_message
+	_img_msg="[{\"type\":\"image\",\"data\":{\"uri\":\"$_furi\",\"summary\":\"[图片]\"}}]"
+	if qq_message_send_group "$_gid" "$_img_msg" >/dev/null; then
+		log_info "sync: tg→qq image OK"; rm -f "$_tmp"; return 0
 	else
-		log_err "sync: tg→qq upload FAIL"; return 1
+		log_err "sync: tg→qq image FAIL: $_ERROR"; rm -f "$_tmp"; return 1
 	fi
 }
 
