@@ -5,12 +5,13 @@
 _HTTP_STATUS=""
 _HTTP_RETRY="${_HTTP_RETRY:-2}"
 _HTTP_TIMEOUT="${_HTTP_TIMEOUT:-10}"
-# Hold the pipe open this long after sending the request, before nc sees stdin
-# EOF. BusyBox nc exits immediately when stdin closes and does not wait for the
-# server reply, so fast-success servers (e.g. Node.js LLOneBot Milky) have their
-# response dropped and the retry loop fires → duplicate messages. Lagrange.Core
-# replied fast enough to hide the race. Override with _HTTP_QUIESCE env.
-_HTTP_QUIESCE="${_HTTP_QUIESCE:-1}"
+# BusyBox nc exits immediately when stdin hits EOF (after the request body is
+# written) without waiting for the server reply. Fast servers like LLOneBot
+# (Node.js) then have their response dropped and the retry loop fires →
+# duplicate messages. Lagrange.Core replied fast enough to hide the race.
+# Fix: feed nc through a FIFO whose write end stays open (background holder
+# that sleeps up to _HTTP_TIMEOUT) until nc exits after the server closes the
+# connection — no fixed per-request delay, works for slow uploads too.
 _CT_JSON="Content-Type: application/json"
 
 # ---- mock support (set by test/mock/mock_http.sh) ----
@@ -134,9 +135,16 @@ ENDWRAP
 				rm -f "$_hwrap" "$_herr"
 				;;
 			*)
-				( cat "$_hreq"; sleep "$_HTTP_QUIESCE" ) | nc "$_hhost" "$_hport" -w "$_HTTP_TIMEOUT" \
+				_hfifo="/tmp/ayu-fifo.$$.$_hretry"
+				mkfifo "$_hfifo"
+				( cat "$_hreq"; sleep "$_HTTP_TIMEOUT" ) > "$_hfifo" &
+				_hwpid=$!
+				nc "$_hhost" "$_hport" -w "$_HTTP_TIMEOUT" < "$_hfifo" 2>/dev/null \
 					| sed '1,/^\r$/d' > "$_HTTP_OUTFILE"
 				_hrc=$?
+				kill "$_hwpid" 2>/dev/null
+				wait "$_hwpid" 2>/dev/null
+				rm -f "$_hfifo"
 				;;
 			esac
 			if [ $_hrc -eq 0 ] && [ -s "$_HTTP_OUTFILE" ]; then
@@ -159,8 +167,15 @@ ENDWRAP
 				rm -f "$_hwrap"
 				;;
 			*)
-				_hres="$( ( cat "$_hreq"; sleep "$_HTTP_QUIESCE" ) | nc "$_hhost" "$_hport" -w "$_HTTP_TIMEOUT" 2>&1)"
+				_hfifo="/tmp/ayu-fifo.$$.$_hretry"
+				mkfifo "$_hfifo"
+				( cat "$_hreq"; sleep "$_HTTP_TIMEOUT" ) > "$_hfifo" &
+				_hwpid=$!
+				_hres="$(nc "$_hhost" "$_hport" -w "$_HTTP_TIMEOUT" < "$_hfifo" 2>&1)"
 				_hrc=$?
+				kill "$_hwpid" 2>/dev/null
+				wait "$_hwpid" 2>/dev/null
+				rm -f "$_hfifo"
 				;;
 			esac
 
