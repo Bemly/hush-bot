@@ -1,9 +1,9 @@
-# QQ (LagrangeV2.Milky) API Reference
+# QQ (Milky) API Reference
 
-> Extracted from CharonAnchor/Lagrange.Milky source code
+> Protocol spec from CharonAnchor/Lagrange.Milky; implemented by LLOneBot
 > 29 endpoints, 100% covered in Ayu.Core adapter
 
-**Protocol**: LagrangeV2.Milky
+**Protocol**: Milky (LagrangeV2-compatible, served by LLOneBot)
 **Auth**: `Authorization: Bearer <QQ_TOKEN>`
 **Base URL**: `http://<QQ_HOST>:<QQ_PORT><QQ_PREFIX>api`
 **Method**: All endpoints use POST

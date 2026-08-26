@@ -84,7 +84,7 @@ telegram/-100111=telegram/-100222/16553       # TG → TG 话题
 ```sh
 QQ_HOST="host.docker.internal"
 QQ_PORT="616"
-QQ_TOKEN=""                    # Lagrange API token
+QQ_TOKEN=""                    # LLOneBot (Milky) API token
 
 TG_TOKEN=""                    # @BotFather 获取
 TG_API_HOST="api.telegram.org"

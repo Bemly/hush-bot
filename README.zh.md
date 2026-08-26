@@ -10,7 +10,7 @@
 
 | 平台 | 端点 | 方法 | README |
 |------|------|------|--------|
-| QQ (LagrangeV2.Milky) | 29/29 | 27 | [adapter/qq/README.md](adapter/qq/README.md) |
+| QQ (Milky / LLOneBot) | 29/29 | 27 | [adapter/qq/README.md](adapter/qq/README.md) |
 | Telegram Bot API | 169/169 | 169 | [adapter/telegram/README.md](adapter/telegram/README.md) |
 | Discord REST API v10 | 185 bot API | 135 | [adapter/discord/README.md](adapter/discord/README.md) |
 

@@ -1,4 +1,4 @@
-# QQ webhook handler — parse Lagrange.Milky events
+# QQ webhook handler — parse Milky events
 # Event JSON format: { time, self_id, event_type, data: {...} }
 
 qq_webhook() {

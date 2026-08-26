@@ -145,7 +145,7 @@ docker run -d --name Ayu \
 - `sh /ayu/cgi-bin/start.sh` as entrypoint (NOT `sleep infinity`) — httpd runs as pid 1, `docker logs Ayu` captures all bot activity via stderr
 - **BOTH volume mounts are required:**
   - `/vol1/1000/Ayu:/ayu` — code and config
-  - `/vol1/1000/Lagrange/img:/tmp/img` — shared with Lagrange for QQ↔TG image/file transfers. **Without this, ALL QQ CDN downloads fail** because sync.sh writes to `/tmp/img/sync-*`
+  - `/vol1/1000/Lagrange/img:/tmp/img` — shared with the QQ backend (LLOneBot) for QQ↔TG image/file transfers. **Without this, ALL QQ CDN downloads fail** because sync.sh writes to `/tmp/img/sync-*`. The LLOneBot container must ALSO mount this same directory at `/root/img` (read-only is fine) so that `file:///root/img/...` URIs in `send_group_message` / `upload_group_file` resolve.
 
 **Why:** Missing `/tmp/img` mount causes silent download failures — wrapper writes to non-existent directory, file is never created, 3 retries exhaust → fallback degrades to URL-only mode (no GIF detection, no file forwarding). See 2026-05-04 incident.
 
